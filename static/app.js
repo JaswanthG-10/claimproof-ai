@@ -15,6 +15,7 @@ const state = {
 document.addEventListener('DOMContentLoaded', () => {
     initApp();
     setupEventListeners();
+    setup3DTiltEffect();
     checkHealth();
 });
 
@@ -26,10 +27,6 @@ async function checkHealth() {
     try {
         const res = await fetch('/health');
         const data = await res.json();
-        const statusPill = document.getElementById('server-status-pill');
-        if (data.status === 'ok') {
-            statusPill.innerHTML = `<span class="dot green"></span> Ready`;
-        }
     } catch (e) {
         console.warn('Health check fallback:', e);
     }
@@ -38,9 +35,6 @@ async function checkHealth() {
 function setupEventListeners() {
     // Welcome Enter Button
     document.getElementById('enter-workspace-btn')?.addEventListener('click', enterWorkspace);
-
-    // Sidebar Toggle
-    document.getElementById('sidebar-toggle-btn')?.addEventListener('click', toggleSidebar);
 
     // Sidebar Nav Items
     document.querySelectorAll('.sidebar-nav .nav-item[data-view]').forEach(item => {
@@ -84,6 +78,32 @@ function setupEventListeners() {
 
 
 /* ========================================== */
+/* 3D CARD MOUSE TILT EFFECT                  */
+/* ========================================== */
+
+function setup3DTiltEffect() {
+    const container = document.getElementById('welcome-screen');
+    const card = document.getElementById('welcome-card-3d');
+    if (!container || !card) return;
+
+    container.addEventListener('mousemove', (e) => {
+        const rect = container.getBoundingClientRect();
+        const x = e.clientX - rect.left - rect.width / 2;
+        const y = e.clientY - rect.top - rect.height / 2;
+
+        const rotateX = (-y / (rect.height / 2)) * 14;
+        const rotateY = (x / (rect.width / 2)) * 14;
+
+        card.style.transform = `rotateX(${rotateX.toFixed(2)}deg) rotateY(${rotateY.toFixed(2)}deg)`;
+    });
+
+    container.addEventListener('mouseleave', () => {
+        card.style.transform = `rotateX(0deg) rotateY(0deg)`;
+    });
+}
+
+
+/* ========================================== */
 /* NAVIGATION & VIEW ROUTER                  */
 /* ========================================== */
 
@@ -91,15 +111,15 @@ function enterWorkspace() {
     const welcome = document.getElementById('welcome-screen');
     const shell = document.getElementById('app-shell');
 
-    welcome.style.transition = 'opacity 0.35s ease';
+    welcome.style.transition = 'opacity 0.4s ease';
     welcome.style.opacity = '0';
 
     setTimeout(() => {
         welcome.classList.add('hidden');
         shell.classList.remove('hidden');
         navigateTo('dashboard');
-        showToast('Welcome to ClaimProof AI', 'Workspace ready for claim reviews.', 'success');
-    }, 350);
+        showToast('Welcome to ClaimProof AI', 'Workspace ready for evidence evaluation.', 'success');
+    }, 400);
 }
 
 function navigateTo(viewName) {
@@ -116,21 +136,20 @@ function navigateTo(viewName) {
         else el.classList.remove('active');
     });
 
-    // Human-friendly header titles
+    // Update Breadcrumb header title
     const titles = {
-        'dashboard': ['Dashboard', 'Overview of your claim review workspace'],
-        'claims': ['Claims', 'Manage and review motor insurance claim packages'],
-        'workspace': ['Claim Review Center', 'Interactive evidence review, missing document check & policy citation'],
-        'documents': ['Document Repository', 'Extracted PDF and TXT files organized by document type'],
-        'policies': ['Policy Library', 'Motor insurance clauses, exclusions and IDV limits'],
-        'analytics': ['Analytics & KPIs', 'Claim approval metrics, missing docs and information mismatch trends'],
-        'history': ['Activity History', 'Timeline of claim extractions and review actions'],
-        'settings': ['Settings', 'Workspace configuration and investigator profile']
+        'dashboard': 'Dashboard',
+        'claims': 'Claims List',
+        'workspace': 'Claim Review Center',
+        'documents': 'Document Library',
+        'policies': 'AI Views & Tools',
+        'analytics': 'Analytics & KPIs',
+        'history': 'Activity History',
+        'settings': 'Settings'
     };
 
     if (titles[viewName]) {
-        document.getElementById('header-page-title').innerText = titles[viewName][0];
-        document.getElementById('header-page-subtitle').innerText = titles[viewName][1];
+        document.getElementById('breadcrumb-current').innerText = titles[viewName];
     }
 
     // Refresh view specific data
@@ -138,13 +157,6 @@ function navigateTo(viewName) {
     else if (viewName === 'documents') renderDocumentsTable();
     else if (viewName === 'policies') renderPolicyLibrary();
     else if (viewName === 'history') renderAuditTimeline();
-}
-
-function toggleSidebar() {
-    const sidebar = document.getElementById('sidebar');
-    state.sidebarCollapsed = !state.sidebarCollapsed;
-    if (state.sidebarCollapsed) sidebar.classList.add('collapsed');
-    else sidebar.classList.remove('collapsed');
 }
 
 
@@ -335,7 +347,7 @@ function renderWorkspace(claim) {
         tr.onclick = () => openEvidenceDrawer(item);
         tr.innerHTML = `
             <td><strong>${item.field_name}</strong></td>
-            <td><code style="color:#5B6CFF; font-weight:bold;">${item.value || 'null'}</code></td>
+            <td><code style="color:#38BDF8; font-weight:bold;">${item.value || 'null'}</code></td>
             <td>${item.source_document}</td>
             <td>Page ${item.page_number}</td>
             <td>${(item.confidence * 100).toFixed(0)}% certain</td>
@@ -364,7 +376,7 @@ function renderWorkspace(claim) {
     // Right Panel: Recommendation Details
     const recCard = document.getElementById('ws-rec-card');
     const recType = claim.recommendation || 'APPROVE';
-    recCard.className = `card-panel recommendation-card ${recType.toLowerCase()}`;
+    recCard.className = `card-iris-panel recommendation-card ${recType.toLowerCase()}`;
     document.getElementById('ws-rec-title').innerText = formatRecText(recType);
 
     let summaryText = "";
@@ -433,19 +445,16 @@ function renderGuidedActions(recommendation) {
         ];
     }
 
-    // 1. Primary Highlighted Button
     const primaryBtn = document.createElement('button');
     primaryBtn.className = 'btn-guided-primary';
     primaryBtn.innerText = `✓ ${primary.label}`;
     primaryBtn.onclick = () => executeDecision(primary.type);
 
-    // 2. Secondary Outlined Button
     const secondaryBtn = document.createElement('button');
     secondaryBtn.className = 'btn-guided-secondary';
     secondaryBtn.innerText = secondary.label;
     secondaryBtn.onclick = () => executeDecision(secondary.type);
 
-    // 3. More Actions Dropdown Menu
     const dropdown = document.createElement('div');
     dropdown.className = 'more-actions-dropdown';
 
@@ -502,7 +511,7 @@ function renderDashboardRecentTable() {
             <td>INR ${Number(c.claimed_amount || 0).toLocaleString('en-IN')}</td>
             <td><span class="status-chip ${getBadgeClass(c.recommendation)}">${formatRecText(c.recommendation)}</span></td>
             <td><span class="badge-pill ${c.completeness?.is_complete ? 'success' : 'warning'}">${c.completeness?.is_complete ? 'Complete' : 'Incomplete'}</span></td>
-            <td><button class="btn-secondary-sm">Open Review →</button></td>
+            <td><button class="btn-link-cyan">Open Review →</button></td>
         `;
         tbody.appendChild(tr);
     });
@@ -523,7 +532,7 @@ function renderClaimsTable() {
             <td>${c.incident_date}</td>
             <td>INR ${Number(c.claimed_amount || 0).toLocaleString('en-IN')}</td>
             <td><span class="status-chip ${getBadgeClass(c.recommendation)}">${formatRecText(c.recommendation)}</span></td>
-            <td><button class="btn-secondary-sm" onclick="openClaimWorkspace('${c.claim_id}')">Open Review</button></td>
+            <td><button class="btn-link-cyan" onclick="openClaimWorkspace('${c.claim_id}')">Open Review</button></td>
         `;
         tbody.appendChild(tr);
     });
@@ -555,7 +564,7 @@ function renderDocumentsTable() {
             <td>${state.activeClaim.claim_id}</td>
             <td>Page ${e.page_number}</td>
             <td><span class="badge-pill success">Extracted</span></td>
-            <td><button class="btn-ghost-sm" onclick="openDocumentDrawer('${e.source_document}', '${e.raw_text || "Text snippet"}')">Preview</button></td>
+            <td><button class="btn-link-cyan" onclick="openDocumentDrawer('${e.source_document}', '${e.raw_text || "Text snippet"}')">Preview</button></td>
         `;
         tbody.appendChild(tr);
     });
@@ -594,10 +603,10 @@ function renderAuditTimeline() {
     state.auditLogs.forEach(log => {
         const div = document.createElement('div');
         div.style.padding = '12px 0';
-        div.style.borderBottom = '1px solid #31427A';
+        div.style.borderBottom = '1px solid #1E273A';
         div.innerHTML = `
             <div style="font-size:12px; color:#94A3B8;">${log.timestamp}</div>
-            <strong style="font-size:14px; color:#5B6CFF;">Claim ${log.claimId}</strong>
+            <strong style="font-size:14px; color:#38BDF8;">Claim ${log.claimId}</strong>
             <p style="font-size:14px; color:#F8FAFC; margin-top:2px;">${log.action}</p>
         `;
         container.appendChild(div);
@@ -677,7 +686,7 @@ function openEvidenceDrawer(item) {
     const body = document.getElementById('drawer-evidence-body');
     body.innerHTML = `
         <div class="fact-item mt-8"><span class="fact-label">Field Name</span><strong class="fact-val">${item.field_name}</strong></div>
-        <div class="fact-item mt-8"><span class="fact-label">Extracted Value</span><strong class="fact-val" style="color:#5B6CFF;">${item.value}</strong></div>
+        <div class="fact-item mt-8"><span class="fact-label">Extracted Value</span><strong class="fact-val" style="color:#38BDF8;">${item.value}</strong></div>
         <div class="fact-item mt-8"><span class="fact-label">Source Document</span><strong class="fact-val">${item.source_document} (Page ${item.page_number})</strong></div>
         <div class="fact-item mt-8"><span class="fact-label">Certainty Score</span><strong class="fact-val">${(item.confidence * 100).toFixed(0)}% certain</strong></div>
         <div class="doc-text-content mt-12">Raw Text Snippet:\n"${item.raw_text || item.value}"</div>
