@@ -1,47 +1,45 @@
-TRACK_ID=PS02
+﻿TRACK_ID=PS02
 
-# ClaimProof AI - Insurance Claims Evidence Review Assistant
+# ClaimProof AI - Motor Insurance Claims Evidence Review Assistant
 
-ClaimProof AI is an intelligent, evidence-grounded review assistant built for motor insurance claims (accidental damage and theft for cars and two-wheelers). It automates document verification, evidence consistency checks, policy clause analysis, and recommendation generation while upholding a strict principle:
+ClaimProof AI is an enterprise-grade, evidence-grounded motor insurance claim checker and preliminary eligibility review assistant built for motor vehicle claims (accidental damage and theft for cars and two-wheelers). It automates document verification, cross-document factual consistency checks, synthetic policy clause grounding, and preliminary claim readiness evaluations while enforcing a strict foundational rule:
 
 > **"NO EVIDENCE, NO ASSERTION."**
 
 ---
 
-## Problem Statement
+## Key Highlights
 
-Insurance claims processing suffers from manual bottlenecks, human error in cross-checking disparate documents (claim forms, FIRs, repair estimates, driving licences, RCs), and inconsistency in policy interpretation. Manual reviewers can easily miss date mismatches, document omissions, or specific policy exclusions, leading to fraud leakage or delayed legitimate payouts.
-
----
-
-## Solution Overview
-
-ClaimProof AI solves this by combining deterministic validation rules with LLM-powered semantic extraction and local FAISS vector retrieval. It ingests multi-document claim packages, extracts structured facts with provenance tracking (document name, page number, confidence), checks cross-document consistency deterministically, retrieves relevant policy clauses, and assigns one of four strict recommendations:
-1. `APPROVE`: Complete evidence, valid coverage, no contradictions or exclusions.
-2. `REQUEST_INFORMATION`: Missing critical mandatory documentation (e.g., driving licence).
-3. `ESCALATE`: Material factual contradictions (e.g., date mismatch between Claim Form & FIR) or semantic uncertainty.
-4. `REJECT`: Evidence explicitly triggers a policy exclusion clause (e.g., commercial ride-share use on a private vehicle policy).
+- **Real End-to-End Pipeline**: Zero fake client-side progress bars or mock assertions. Every document upload invokes the central analysis pipeline (`POST /api/claims/{claim_id}/documents`), parses the file, extracts evidence with provenance, evaluates deterministic rules, and returns live assessment results.
+- **Strict Deterministic Decision Hierarchy**: LLM explanations are constrained to an immutable decision engine. The LLM can never override policy or rule logic.
+- **Safe Approval Gate**: The system strictly prevents unsafe approval fallbacks. Zero policy assessments or empty evidence guarantees `ESCALATE`, never `APPROVE`.
+- **Backend Single Source of Truth**: Policy clauses in `data/policy/policy_clauses.json` directly match `synthetic_motor_policy.pdf` and are exposed via `GET /api/policy/clauses` to guarantee 100% clause synchronization across FAISS indexing, backend reasoning, and the frontend UI.
+- **Evidence Provenance Tracking**: Every finding and evidence item tracks `source_document`, `page_number`, `source_field`, `raw_evidence_text`, and applicable `policy_clause` citations.
+- **Multi-Format Date Normalization**: Standardizes `YYYY-MM-DD`, `DD-MM-YYYY`, `DD/MM/YYYY`, and textual date formats, eliminating false contradictions.
+- **13 Automated Unit & Integration Tests**: Comprehensive pytest test suite covering all demo cases, edge cases, IDV limits, notification windows, security validations, and real file uploads.
+- **GitHub Actions CI/CD**: Automated linting, bytecode compilation, and test execution workflow in `.github/workflows/ci.yml`.
 
 ---
 
-## Architecture
+## Architecture & Workflow
 
 ```text
                                  ┌─────────────────────────┐
                                  │   Claim Documents       │
-                                 │ (PDFs & TXT files)      │
+                                 │  (PDFs, TXT, Images)    │
                                  └────────────┬────────────┘
                                               │
                                               ▼
                                  ┌─────────────────────────┐
-                                 │  Document Parser        │
-                                 │  (PyMuPDF / fitz)       │
+                                 │  Document Parser (fitz) │
+                                 │  + OCR Fallback Check   │
                                  └────────────┬────────────┘
                                               │
                                               ▼
                                  ┌─────────────────────────┐
-                                 │  Structured Extraction  │
-                                 │ (Gemini 3.5 Flash / JSON│
+                                 │   Evidence Extraction   │
+                                 │  (Deterministic Regex   │
+                                 │   + Optional Gemini)    │
                                  └────────────┬────────────┘
                                               │
                                               ▼
@@ -53,135 +51,159 @@ ClaimProof AI solves this by combining deterministic validation rules with LLM-p
                         ┌─────────────────────┴─────────────────────┐
                         ▼                                           ▼
           ┌───────────────────────────┐               ┌───────────────────────────┐
-          │  FAISS Policy Retriever   │               │   Deterministic Rules     │
-          │  & Policy Reasoner        │               │   (Dates, IDV, Docs Window│
-          └─────────────┬─────────────┘               └─────────────┬─────────────┘
-                        │                                           │
+          │   Hybrid Policy Search    │               │   Deterministic Rules     │
+          │ (Mandatory Structural     │               │  - Policy Window (1.2)    │
+          │  + SHA256 / FAISS Vector) │               │  - Notification 7d (6.1)  │
+          └─────────────┬─────────────┘               │  - DL Validity (4.1)      │
+                        │                             │  - IDV Limit ₹8L (1.1)    │
+                        │                             └─────────────┬─────────────┘
                         └─────────────────────┬─────────────────────┘
                                               │
                                               ▼
                                  ┌─────────────────────────┐
-                                 │  Recommendation Engine  │
-                                 │ (Strict Rule Hierarchy) │
+                                 │  Strict Decision Engine │
+                                 │   (Immutable Hierarchy) │
                                  └────────────┬────────────┘
                                               │
                                               ▼
                                  ┌─────────────────────────┐
-                                 │ SQLite Store & FastAPI  │
-                                 │ Dashboard Interface     │
+                                 │  SQLite (No Duplicates) │
+                                 │   & FastAPI Web UI      │
                                  └─────────────────────────┘
 ```
 
 ---
 
-## GenAI Workflow
+## Strict Decision Hierarchy
 
-1. **Structured Extractions**: Gemini 3.5 Flash converts raw unstructured PDF page text into validated Pydantic JSON objects representing claims, repair estimates, FIRs, and licences.
-2. **Local Embedding Vector Search**: Motor policy clauses are chunked and indexed into a local FAISS vector database using embeddings. The top relevant clauses are retrieved based on claim facts.
-3. **Semantic Policy Classification**: Gemini evaluates candidate policy clauses against extracted evidence to categorize each clause as `SUPPORTS`, `BLOCKS`, `UNCERTAIN`, or `NOT_APPLICABLE` with exact page & clause citations.
-4. **Explanation Generation**: Gemini generates natural-language summaries explaining the final decision reached by the deterministic rule engine.
+ClaimProof AI evaluates claim eligibility through six deterministic gates:
 
----
-
-## Deterministic Logic vs LLM Logic
-
-| Task / Domain | Deterministic Logic (Python) | LLM Reasoning (Gemini 3.5 Flash) |
-| :--- | :--- | :--- |
-| **Field Extraction** | Strict schema validation via Pydantic | Unstructured text parsing to JSON |
-| **Contradiction Detection** | Date comparison, exact string/number equality | Narrative interpretation & intent |
-| **Document Completeness** | Mandatory doc checklist per claim type | Contextual document type recognition |
-| **Policy Search** | Local FAISS vector retrieval & score thresholding | Clause grounding & applicability |
-| **Final Recommendation** | Strict hierarchical state machine (cannot be overridden) | Investigator summary explanation |
+| Gate | Condition | Outcome | Customer-Facing Label |
+| :--- | :--- | :--- | :--- |
+| **Gate 0** | File corrupted / unreadable | `ESCALATE` | Manual Review Needed by Claims Officer |
+| **Gate 1** | Mandatory preliminary documents missing | `REQUEST_INFORMATION` | More Information Needed Before Submission |
+| **Gate 2** | Material cross-document contradiction | `ESCALATE` | Manual Review Needed by Claims Officer |
+| **Gate 3** | Policy coverage applicability uncertain | `ESCALATE` | Manual Review Needed by Claims Officer |
+| **Gate 4** | Policy exclusion or IDV limit violation | `REJECT` | Potential Policy Exclusion or Ineligibility Detected |
+| **Gate 5** | All documents present, verified coverage, no contradictions | `APPROVE` | Evidence Appears Ready for Submission |
+| **Gate 6** | Default safety fallback | `ESCALATE` | Manual Review Needed by Claims Officer |
 
 ---
 
-## Data & Synthetic Documents Generated
+## Document Checklists (Synthetic Motor Policy)
 
-The project comes pre-seeded with a comprehensive 7-page synthetic motor insurance policy (`data/policy/synthetic_motor_policy.pdf`) and 4 synthetic claim test packages:
-1. `claim_001_approve`: Accident claim with all required documents, consistent dates, and amount within IDV limit.
-2. `claim_002_request_information`: Accident claim missing driving licence.
-3. `claim_003_escalate`: Claim with a material date mismatch (Claim form: Aug 21, 2026 vs. FIR: Aug 22, 2026).
-4. `claim_004_reject`: Claim for an accident during commercial ride-share taxi operation on a private vehicle policy (Clause 4.2 Exclusion).
+### Accidental Damage Claims (Clause 5.1)
+- **Mandatory Submission**:
+  1. Signed Claim Form
+  2. Itemized Repair Estimate from authorized service centre
+  3. Valid Driving Licence of the driver
+  4. Vehicle Registration Certificate (RC)
+
+### Theft Claims (Clause 3.1 & 5.2)
+- **Mandatory Submission**:
+  1. Signed Claim Form
+  2. Police First Information Report (FIR)
+  3. Vehicle Registration Certificate (RC)
+- **Settlement Documents** (Required before final payout, flagged as non-blocking notices):
+  1. Police Final Non-Traceable Report
+  2. Original Vehicle Keys
+  3. Ownership Transfer Forms
 
 ---
 
-## Installation
+## Pre-Configured Demo Cases
+
+| Case ID | Incident Type | Core Condition | Expected Outcome |
+| :--- | :--- | :--- | :--- |
+| `claim_001_approve` | Accident | Complete docs, consistent dates, estimate within ₹8,00,000 IDV limit | `APPROVE` |
+| `claim_002_request_information` | Accident | Missing mandatory Driving Licence document | `REQUEST_INFORMATION` |
+| `claim_003_escalate` | Theft | Contradiction between Claim Form date (2026-08-21) and FIR date (2026-08-22) | `ESCALATE` |
+| `claim_004_reject` | Accident | Vehicle operated for commercial ride-share taxi fare (Clause 4.2 Exclusion) | `REJECT` |
+
+---
+
+## API Reference
+
+### Core Endpoints
+
+- `GET /`: Serves the responsive web workspace.
+- `GET /health`: Diagnostic health check returning database status, policy clauses count, and vector provider.
+- `GET /api/policy/clauses`: Returns the 12 canonical policy clauses derived from `synthetic_motor_policy.pdf`.
+- `GET /api/demo-cases`: Lists available demo cases with titles and expected outcomes.
+- `POST /api/demo-cases/{case_id}/analyze`: Runs the central analysis pipeline on a pre-seeded demo package.
+- `POST /api/claims/analyze`: Ingests initial multipart document uploads and creates a new reviewed claim package.
+- `POST /api/claims/{claim_id}/documents`: **Real document upload endpoint**. Saves file to the claim package, re-runs complete pipeline, cleans previous records, and returns the updated `ClaimReview`.
+- `GET /api/claims/{claim_id}`: Retrieves stored review details from SQLite.
+
+---
+
+## Installation & Setup
+
+### Prerequisites
+- Python 3.10, 3.11, 3.12, 3.13, or 3.14
+- Git
 
 ```bash
-# Clone or navigate to the project directory
+# Clone the repository
+git clone https://github.com/JaswanthG-10/claimproof-ai.git
 cd claimproof-ai
 
 # Install dependencies
 pip install -r requirements.txt
 ```
 
----
+### Environment Variables (Optional)
 
-## Environment Variables
-
-Set your Gemini API key:
+Copy `.env.example` to `.env`:
 
 ```bash
-# Windows PowerShell
-$env:GEMINI_API_KEY="your-gemini-api-key-here"
-
-# Linux / macOS / Bash
-export GEMINI_API_KEY="your-gemini-api-key-here"
+# Optional: Set Gemini API key for narrative explanations
+# If unset, ClaimProof AI operates in 100% deterministic mode
+export GEMINI_API_KEY="your-gemini-api-key"
 ```
-
-*Note: If `GEMINI_API_KEY` is absent, ClaimProof AI operates gracefully using deterministic rule fallbacks without crashing.*
 
 ---
 
-## How to Run
+## Running the Application
 
-Launch the entire application with a single command:
+Start the local server:
 
 ```bash
 python app.py
 ```
 
-The application will launch on:
-[http://localhost:8000](http://localhost:8000)
+Open your browser at:
+**[http://localhost:8000](http://localhost:8000)**
 
 ---
 
-## Demo Cases
+## Running Automated Tests
 
-You can test the 4 pre-configured demo cases directly in the interactive UI or via API:
-- **Case 1: Approve** (`claim_001_approve`) -> `APPROVE`
-- **Case 2: Missing Document** (`claim_002_request_information`) -> `REQUEST_INFORMATION`
-- **Case 3: Factual Mismatch** (`claim_003_escalate`) -> `ESCALATE`
-- **Case 4: Policy Exclusion** (`claim_004_reject`) -> `REJECT`
+Run the complete 13-test test suite:
 
----
+```bash
+pytest -v tests/
+```
 
-## API Endpoints
+Verify Python bytecode compilation:
 
-- `GET /`: Serves the Investigator Dashboard HTML UI.
-- `GET /health`: Health status & configuration check.
-- `GET /api/demo-cases`: Lists available synthetic demo claims.
-- `POST /api/demo-cases/{case_id}/analyze`: Analyzes a specific demo case end-to-end.
-- `POST /api/claims/analyze`: Accepts multipart document uploads for dynamic claim evaluation.
+```bash
+python -m compileall .
+```
 
 ---
 
-## Limitations
+## CI/CD Pipeline
 
-- Local FAISS vector index uses exact vector distance without graph network clustering.
-- OCR on scanned images/handwritten documents relies on PDF text layer availability (PyMuPDF).
-- Designed for motor insurance domain (accidental damage and theft).
-
----
-
-## Future Improvements
-
-- OCR pipeline integration (Tesseract / Vision API) for hand-written police report scanning.
-- Automated multi-document fraud ring detection across historical claims in SQLite.
-- Interactive human-in-the-loop review workflow for complex escalations.
+The project includes an automated GitHub Actions CI pipeline (`.github/workflows/ci.yml`) that validates every pull request and push to `main`:
+1. Checks out repository and sets up Python 3.10 and 3.11.
+2. Caches pip dependencies.
+3. Installs requirements.
+4. Executes `python -m compileall .` for syntax verification.
+5. Executes `pytest -v tests/` ensuring 100% test success.
 
 ---
 
-## Demo Video
+## License
 
-[Link to Demo Video](https://youtube.com/placeholder-demo-video)
+MIT License. Designed for Track PS02 — Insurance Claims Evidence Review Assistant.

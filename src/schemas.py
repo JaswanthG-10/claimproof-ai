@@ -1,4 +1,4 @@
-from enum import Enum
+﻿from enum import Enum
 from typing import List, Optional, Dict, Any
 from pydantic import BaseModel, Field
 
@@ -31,6 +31,7 @@ class DocumentMetadata(BaseModel):
     filename: str
     document_type: str
     total_pages: int = 1
+    confidence: float = 1.0
 
 
 class EvidenceItem(BaseModel):
@@ -60,6 +61,7 @@ class CompletenessResult(BaseModel):
     submitted_documents: List[str]
     missing_documents: List[str]
     is_complete: bool
+    settlement_documents: List[str] = Field(default_factory=list)
 
 
 class PolicyClause(BaseModel):
@@ -76,7 +78,7 @@ class PolicyAssessment(BaseModel):
     category: str
     page: int
     clause_text: str
-    classification: FindingStatus  # SUPPORTS, BLOCKS, UNCERTAIN, NOT_APPLICABLE
+    classification: FindingStatus  # SUPPORTED, BLOCKED, UNCERTAIN, NOT_APPLICABLE
     reasoning: str
     confidence: float = 1.0
     supporting_evidence: List[str] = Field(default_factory=list)
@@ -89,17 +91,23 @@ class Finding(BaseModel):
     severity: Severity
     source_document: Optional[str] = None
     source_page: Optional[int] = None
+    source_field: Optional[str] = None
+    raw_evidence_text: Optional[str] = None
     policy_clause: Optional[str] = None
+    policy_page: Optional[int] = None
     evidence_ids: List[str] = Field(default_factory=list)
 
 
 class RecommendationResult(BaseModel):
     recommendation: RecommendationType
+    recommendation_label: str = ""
     summary_reason: str
     detailed_explanation: str
     missing_critical_documents: List[str] = Field(default_factory=list)
     critical_contradictions: List[Contradiction] = Field(default_factory=list)
     blocking_clauses: List[PolicyAssessment] = Field(default_factory=list)
+    next_actions: List[str] = Field(default_factory=list)
+    analysis_warnings: List[str] = Field(default_factory=list)
 
 
 class ClaimData(BaseModel):
@@ -109,11 +117,14 @@ class ClaimData(BaseModel):
     vehicle_number: Optional[str] = None
     vehicle_model: Optional[str] = None
     driver_name: Optional[str] = None
+    driver_licence_number: Optional[str] = None
+    driver_licence_expiry: Optional[str] = None
     incident_type: Optional[str] = None  # accident / theft
     incident_date: Optional[str] = None  # YYYY-MM-DD
     incident_location: Optional[str] = None
+    submission_date: Optional[str] = None  # YYYY-MM-DD
     claimed_amount: Optional[float] = None
-    commercial_use: Optional[bool] = False
+    commercial_use: Optional[bool] = None  # None = Unknown/Not Mentioned, True = Commercial, False = Private
     evidence_store: List[EvidenceItem] = Field(default_factory=list)
 
 
@@ -137,9 +148,15 @@ class ClaimReview(BaseModel):
     incident_date: str
     claimed_amount: float
     recommendation: RecommendationType
+    recommendation_label: Optional[str] = None
     completeness: CompletenessResult
     evidence_items: List[EvidenceItem]
     contradictions: List[Contradiction]
     findings: List[Finding]
     policy_assessments: List[PolicyAssessment]
     explanation: str
+    next_actions: List[str] = Field(default_factory=list)
+    analysis_warnings: List[str] = Field(default_factory=list)
+    submission_date: Optional[str] = None
+    policy_number: Optional[str] = None
+    driver_name: Optional[str] = None

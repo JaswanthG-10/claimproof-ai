@@ -466,8 +466,48 @@ async function submitNewClaimForm() {
 /* DEMO CASES RUNNER & DEFAULT CLAIM SETUP   */
 /* ========================================== */
 
+
+async function fetchPolicyClauses() {
+    try {
+        const res = await fetch('/api/policy/clauses');
+        if (res.ok) {
+            const data = await res.json();
+            if (data && data.length > 0) {
+                state.policyClauses = data.map(c => {
+                    let catName = 'COVERAGE';
+                    let icon = '🛡️';
+                    const c_cat = (c.category || '').toLowerCase();
+                    if (c_cat.includes('exclusion')) {
+                        catName = 'EXCLUSIONS';
+                        icon = '🚫';
+                    } else if (c_cat.includes('required')) {
+                        catName = 'REQUIRED';
+                        icon = '📋';
+                    } else if (c_cat.includes('idv') || c_cat.includes('limit') || c_cat.includes('period') || c_cat.includes('window')) {
+                        catName = 'IDV';
+                        icon = '⚖️';
+                    }
+                    return {
+                        clause_id: c.clause_id,
+                        clause_title: c.clause_title,
+                        category: catName,
+                        icon: icon,
+                        clause_text: c.clause_text,
+                        reasoning: c.clause_title + ' (Page ' + c.page + ')',
+                        page: c.page,
+                        classification: 'SUPPORTED'
+                    };
+                });
+            }
+        }
+    } catch (e) {
+        console.warn('Could not load policy clauses from API:', e);
+    }
+}
+
 async function fetchDemoCasesList() {
     try {
+        await fetchPolicyClauses();
         const res = await fetch('/api/demo-cases');
         if (res.ok) {
             await res.json();
@@ -774,9 +814,19 @@ function renderWorkspace(claim) {
     const recExplanationEl = document.getElementById('ws-rec-explanation');
     const recGuidanceEl = document.getElementById('ws-rec-guidance');
 
-    if (recTitleEl) recTitleEl.innerText = formatRecText(recType);
+    if (recTitleEl) recTitleEl.innerText = claim.recommendation_label || formatRecText(recType);
 
-    if (recType === 'APPROVE') {
+    if (claim.explanation && claim.next_actions && claim.next_actions.length > 0) {
+        if (recSummaryEl) recSummaryEl.innerText = claim.explanation.split('\n')[0];
+        if (recExplanationEl) {
+            recExplanationEl.innerHTML = claim.next_actions.map(a => '• ' + escapeHtml(a)).join('<br>');
+        }
+        if (recGuidanceEl) {
+            recGuidanceEl.innerText = (claim.analysis_warnings && claim.analysis_warnings.length > 0) 
+                ? claim.analysis_warnings.join(' | ') 
+                : 'Preliminary AI Review — Subject to Formal Insurer Verification';
+        }
+    } else if (recType === 'APPROVE') {
         if (recSummaryEl) recSummaryEl.innerText = "Your claim currently appears ready for submission with complete required documentation and valid policy coverage.";
         if (recExplanationEl) recExplanationEl.innerHTML = "✓ All mandatory documents available<br>✓ Valid coverage dates verified<br>✓ Repair estimate within policy limits";
         if (recGuidanceEl) recGuidanceEl.innerText = "You can proceed to submit your claim package to your insurer.";
@@ -1059,181 +1109,124 @@ function filterClaimsBySearch(query) {
 /* ========================================== */
 
 const MASTER_POLICY_CLAUSES = [
-    // 1. COVERAGE
-    {
-        clause_id: 'Clause 2.1',
-        clause_title: 'Own Damage & Accidental Collision',
-        category: 'COVERAGE',
-        icon: '🛡️',
-        clause_text: 'The Company will indemnify the Insured against loss or damage to the vehicle insured and/or accessories by accidental external means, collision, or overturning.',
-        reasoning: 'Covers physical repairs and parts replacement up to the Insured Declared Value (IDV) subject to depreciation and deductible.',
-        page: 4,
-        classification: 'SUPPORTED'
-    },
-    {
-        clause_id: 'Clause 2.2',
-        clause_title: 'Third Party Legal Liability',
-        category: 'COVERAGE',
-        icon: '⚖️',
-        clause_text: 'Subject to limits of liability, the Company will indemnify the Insured in the event of an accident against all sums the Insured becomes legally liable to pay in respect of third-party property damage or bodily injury.',
-        reasoning: 'Standard statutory liability coverage mandated under the Motor Vehicles Act.',
-        page: 5,
-        classification: 'SUPPORTED'
-    },
-    {
-        clause_id: 'Clause 2.3',
-        clause_title: 'Fire, Lightning & Explosion',
-        category: 'COVERAGE',
-        icon: '🔥',
-        clause_text: 'Loss or damage resulting from fire, explosion, self-ignition or lightning is covered provided the vehicle was maintained in roadworthy condition without unauthorized electrical modifications.',
-        reasoning: 'Full settlement eligibility for thermal and fire incidents when corroborated by surveyor inspection.',
-        page: 4,
-        classification: 'SUPPORTED'
-    },
-    {
-        clause_id: 'Clause 2.4',
-        clause_title: 'Theft & Total Loss',
-        category: 'COVERAGE',
-        icon: '🔒',
-        clause_text: 'In the event of total vehicle theft or burglary, the Company will settle the claim based on the Insured Declared Value (IDV) following non-traceable police final report.',
-        reasoning: 'Applies to total loss when original keys, registration documents, and police non-traceable reports are provided.',
-        page: 6,
-        classification: 'SUPPORTED'
-    },
-
-    // 2. EXCLUSIONS
-    {
-        clause_id: 'Clause 4.1',
-        clause_title: 'Driving Under Influence of Alcohol or Drugs',
-        category: 'EXCLUSIONS',
-        icon: '⚠️',
-        clause_text: 'The Company shall not be liable to make any payment in respect of any accidental loss or damage suffered whilst the insured vehicle is being driven by any person whilst under the influence of intoxicating liquor or drugs.',
-        reasoning: 'Immediate exclusion of coverage if medical test or police report confirms intoxication above statutory limits.',
-        page: 8,
-        classification: 'BLOCKED'
-    },
-    {
-        clause_id: 'Clause 4.2',
-        clause_title: 'Commercial Ride-Sharing or Taxi Use',
-        category: 'EXCLUSIONS',
-        icon: '🚫',
-        clause_text: 'The policy excludes any loss, damage and/or liability sustained or incurred whilst the private vehicle is being used otherwise than in accordance with the Limitations as to Use, including hire, fare reward, or unauthorized commercial taxi operation.',
-        reasoning: 'Private motor insurance strictly excludes commercial fare-paying transport without commercial endorsement.',
-        page: 9,
-        classification: 'BLOCKED'
-    },
-    {
-        clause_id: 'Clause 4.3',
-        clause_title: 'Consequential & Mechanical Breakdown',
-        category: 'EXCLUSIONS',
-        icon: '⚙️',
-        clause_text: 'The Company shall not be liable in respect of consequential loss, depreciation, wear and tear, mechanical or electrical breakdown, failures or breakages.',
-        reasoning: 'Internal mechanical component failures unrelated to external collision impact are excluded from settlement.',
-        page: 8,
-        classification: 'BLOCKED'
-    },
-    {
-        clause_id: 'Clause 4.4',
-        clause_title: 'Intentional Damage or Staged Accidents',
-        category: 'EXCLUSIONS',
-        icon: '🛑',
-        clause_text: 'Any deliberate, pre-meditated, or fraudulent acts resulting in vehicle damage shall render the policy void and result in forfeiture of all claims.',
-        reasoning: 'Zero-tolerance policy clause protecting evidence integrity and preventing insurance fraud.',
-        page: 10,
-        classification: 'BLOCKED'
-    },
-
-    // 3. REQUIRED DOCUMENTS
-    {
-        clause_id: 'Clause 3.1',
-        clause_title: 'Signed Claim Form & Incident Statement',
-        category: 'REQUIRED',
-        icon: '📝',
-        clause_text: 'Notice shall be given in writing to the Company immediately upon the occurrence of any accidental loss or damage. A duly completed and signed Claim Form must be submitted within 7 days of incident.',
-        reasoning: 'Mandatory initial submission detailing vehicle, driver, date, and narrative of the incident.',
-        page: 7,
-        classification: 'SUPPORTED'
-    },
-    {
-        clause_id: 'Clause 3.2',
-        clause_title: 'Itemized Repair Estimate & Workshop Invoice',
-        category: 'REQUIRED',
-        icon: '🧾',
-        clause_text: 'An itemized detailed repair estimate from an authorized garage showing labor charges and replacement parts must be presented before repair commences.',
-        reasoning: 'Enables insurance surveyor assessment against market depreciation tables prior to approval.',
-        page: 7,
-        classification: 'SUPPORTED'
-    },
-    {
-        clause_id: 'Clause 3.3',
-        clause_title: 'Registration Certificate (RC Book)',
-        category: 'REQUIRED',
-        icon: '📄',
-        clause_text: 'A copy of the valid Vehicle Registration Certificate issued by the Regional Transport Authority must be provided with engine and chassis numbers matching policy schedule.',
-        reasoning: 'Verifies insurable interest and ownership of the claimed motor vehicle.',
-        page: 7,
-        classification: 'SUPPORTED'
-    },
-    {
-        clause_id: 'Clause 3.4',
-        clause_title: 'Valid Driving Licence of Person Driving',
-        category: 'REQUIRED',
-        icon: '🪪',
-        clause_text: 'Any person driving the vehicle at the time of accident must hold an effective and valid driving licence for the category of vehicle and not be disqualified from holding such licence.',
-        reasoning: 'Essential statutory condition. Failure to produce a valid driving licence renders own-damage claim unpayable.',
-        page: 7,
-        classification: 'SUPPORTED'
-    },
-    {
-        clause_id: 'Clause 3.5',
-        clause_title: 'Police First Information Report (FIR)',
-        category: 'REQUIRED',
-        icon: '🚔',
-        clause_text: 'In cases of third-party property damage, bodily injury, major highway collision, or theft, a certified copy of the Police First Information Report (FIR) is mandatory.',
-        reasoning: 'Provides independent official corroboration of incident location, date, and third-party details.',
-        page: 8,
-        classification: 'SUPPORTED'
-    },
-
-    // 4. IDV & CLAIM CONDITIONS
     {
         clause_id: 'Clause 1.1',
-        clause_title: 'Insured Declared Value (IDV) Limit ₹5,00,000',
+        clause_title: 'Insured Declared Value (IDV Limit)',
         category: 'IDV',
         icon: '💰',
-        clause_text: 'The Insured Declared Value (IDV) of the vehicle shall be treated as the Maximum Sum Insured for the purpose of this policy throughout the period of insurance.',
-        reasoning: 'Sets the maximum liability of the insurer in the event of total loss or constructive total loss.',
-        page: 3,
+        clause_text: 'The Insured Declared Value (IDV) of the vehicle is fixed at INR 8,00,000. Total claim liability for any single loss or damage shall not exceed this declared IDV limit.',
+        reasoning: 'Maximum liability limit payable under policy schedule for accidental damage or total loss.',
+        page: 1,
         classification: 'SUPPORTED'
     },
     {
         clause_id: 'Clause 1.2',
-        clause_title: 'Depreciation on Parts Replaced',
+        clause_title: 'Policy Period & Active Validity',
         category: 'IDV',
-        icon: '📉',
-        clause_text: 'Depreciation rates shall apply to replacement parts: Rubber/Nylon/Plastic (50%), Fiber glass (30%), Glass parts (Nil), Metal parts according to vehicle age scale.',
-        reasoning: 'Governs payout calculations for individual damaged components during claim settlement.',
-        page: 4,
+        icon: '📅',
+        clause_text: 'This Motor Comprehensive Policy is valid from 2026-01-01 to 2026-12-31. Loss or damage occurring outside this policy period is not covered under any circumstances.',
+        reasoning: 'Verifies the incident date falls within the active calendar policy coverage window.',
+        page: 1,
         classification: 'SUPPORTED'
     },
     {
-        clause_id: 'Clause 1.3',
-        clause_title: 'Active Policy Period & Validity',
-        category: 'IDV',
-        icon: '📅',
-        clause_text: 'Coverage applies only to incidents occurring between 00:00 hrs of Policy Inception Date (01 Jan 2026) and Midnight of Policy Expiry Date (31 Dec 2026).',
-        reasoning: 'Incidents occurring outside active dates or during lapsed grace periods are not covered.',
+        clause_id: 'Clause 2.1',
+        clause_title: 'Accidental External Damage Cover',
+        category: 'COVERAGE',
+        icon: '🛡️',
+        clause_text: 'Subject to terms and conditions, the Company indemnifies against accidental external damage, collision, fire, lightning, explosion, or malicious acts. Deductible applicable per claim: INR 1,000.',
+        reasoning: 'Covers physical repairs and parts replacement up to the IDV limit subject to deductible.',
         page: 2,
         classification: 'SUPPORTED'
     },
     {
-        clause_id: 'Clause 1.4',
-        clause_title: 'Compulsory Excess / Deductible ₹1,000',
+        clause_id: 'Clause 3.1',
+        clause_title: 'Theft Coverage & Requirements',
+        category: 'COVERAGE',
+        icon: '🔒',
+        clause_text: 'Loss of vehicle due to theft is covered up to IDV subject to immediate Police First Information Report (FIR), written notice within 7 days, submission of Police Final Non-Traceable Report, and transfer of RC and original keys.',
+        reasoning: 'Applies to total loss when original keys, registration documents, and police non-traceable report are provided.',
+        page: 3,
+        classification: 'SUPPORTED'
+    },
+    {
+        clause_id: 'Clause 4.1',
+        clause_title: 'Exclusion - Invalid Driving Licence',
+        category: 'EXCLUSIONS',
+        icon: '🪪',
+        clause_text: 'The Company shall not be liable for any loss or damage incurred while the vehicle is driven by or is under the control of any person who does not hold an effective and valid driving licence at the time of the accident.',
+        reasoning: 'Driving without a valid, unexpired licence for the vehicle class completely excludes coverage.',
+        page: 4,
+        classification: 'BLOCKED'
+    },
+    {
+        clause_id: 'Clause 4.2',
+        clause_title: 'Exclusion - Prohibited Commercial Use',
+        category: 'EXCLUSIONS',
+        icon: '🚫',
+        clause_text: 'The Company shall not be liable for any loss, damage, or third-party liability if the private personal vehicle is operated, rented, hired, or used for commercial purposes, rideshare taxi operations, or carriage of goods for hire or reward.',
+        reasoning: 'Commercial ridesharing or taxi operations under a private vehicle policy strictly voids coverage.',
+        page: 4,
+        classification: 'BLOCKED'
+    },
+    {
+        clause_id: 'Clause 4.3',
+        clause_title: 'Exclusion - Intoxication & Illegal Driving',
+        category: 'EXCLUSIONS',
+        icon: '⚠️',
+        clause_text: 'Any loss or damage occurring whilst the driver of the vehicle is under the influence of intoxicating liquor or drugs is strictly excluded from coverage.',
+        reasoning: 'Claims involving intoxicated driving are strictly inadmissible.',
+        page: 5,
+        classification: 'BLOCKED'
+    },
+    {
+        clause_id: 'Clause 4.4',
+        clause_title: 'Exclusion - Consequential Loss & Wear and Tear',
+        category: 'EXCLUSIONS',
+        icon: '⚙️',
+        clause_text: 'Consequential loss, depreciation, wear and tear, mechanical or electrical breakdown, failures or breakages are strictly excluded.',
+        reasoning: 'Routine mechanical failures and non-accidental wear and tear are not reimbursable.',
+        page: 5,
+        classification: 'BLOCKED'
+    },
+    {
+        clause_id: 'Clause 5.1',
+        clause_title: 'Required Documents - Accidental Damage Claims',
+        category: 'REQUIRED',
+        icon: '📋',
+        clause_text: 'For processing any accidental damage claim, the insured must submit: (1) Official Claim Form duly filled and signed, (2) Itemized Repair Estimate from authorized repair centre, (3) Valid Driving Licence of the driver at the time of accident, (4) Vehicle Registration Certificate (RC).',
+        reasoning: 'Checklist of mandatory preliminary documents required before accidental damage review.',
+        page: 6,
+        classification: 'SUPPORTED'
+    },
+    {
+        clause_id: 'Clause 5.2',
+        clause_title: 'Required Documents - Theft Claims',
+        category: 'REQUIRED',
+        icon: '📁',
+        clause_text: 'For processing any theft claim, the insured must submit: (1) Official Claim Form, (2) Police First Information Report (FIR), (3) Vehicle Registration Certificate (RC), (4) Original Vehicle Keys and ownership transfer documents.',
+        reasoning: 'Mandatory documentation for preliminary theft claim evaluation.',
+        page: 6,
+        classification: 'SUPPORTED'
+    },
+    {
+        clause_id: 'Clause 6.1',
+        clause_title: 'Claim Notification Window (7 Days)',
+        category: 'REQUIRED',
+        icon: '⏱️',
+        clause_text: 'Notice of any claim, accident, or theft must be given in writing to the Company immediately and within 7 calendar days of the occurrence of the incident.',
+        reasoning: 'Notice must be lodged within 7 days of incident date to prevent prejudice to insurer investigation.',
+        page: 7,
+        classification: 'SUPPORTED'
+    },
+    {
+        clause_id: 'Clause 7.1',
+        clause_title: 'Maximum Insured Declared Value Limit',
         category: 'IDV',
         icon: '🏷️',
-        clause_text: 'The Insured shall be responsible for the first ₹1,000 of each and every claim arising out of accidental damage to the vehicle.',
-        reasoning: 'Standard regulatory deductible subtracted from final admissible settlement amount.',
-        page: 3,
+        clause_text: 'The maximum indemnity payable under this policy is strictly limited to the Insured Declared Value (IDV) of INR 8,00,000 specified in the Policy Schedule.',
+        reasoning: 'Caps total insurer liability at INR 8,00,000.',
+        page: 7,
         classification: 'SUPPORTED'
     }
 ];
@@ -1246,7 +1239,8 @@ function renderPolicyLibrary() {
     const filter = (state.policyFilter || 'all').toLowerCase();
     const query = (state.policySearchQuery || '').toLowerCase();
 
-    const filtered = MASTER_POLICY_CLAUSES.filter(c => {
+    const clauseSource = (state.policyClauses && state.policyClauses.length > 0) ? state.policyClauses : MASTER_POLICY_CLAUSES;
+    const filtered = clauseSource.filter(c => {
         const cat = c.category.toLowerCase();
         
         // Category Filter Match
@@ -1556,111 +1550,106 @@ function clearSelectedUploadFile() {
     if (uploadBtn) uploadBtn.disabled = false;
 }
 
-function startDocumentUploadProcess() {
-    const docTypeSelect = document.getElementById('upload-doc-type-select');
-    const docType = docTypeSelect ? docTypeSelect.value : 'driving_licence';
-    const docTitle = docType.replace('_', ' ').toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
+async function startDocumentUploadProcess() {
+    const claim = state.activeClaim || (state.claimsList.length > 0 ? state.claimsList[0] : null);
+    const claimId = claim ? claim.claim_id : 'CLM-CUSTOM-001';
+    const file = state.selectedUploadFile;
 
-    // Switch to progress state
+    if (!file) {
+        showToast('Selection Required', 'Please select a file to upload.', 'warning');
+        return;
+    }
+
+    // Switch UI to progress state
     document.getElementById('upload-state-idle')?.classList.add('hidden');
     document.getElementById('upload-state-progress')?.classList.remove('hidden');
 
     const progressBar = document.getElementById('upload-progress-bar-fill');
     const progressPercent = document.getElementById('upload-progress-percent');
+    const headline = document.getElementById('upload-progress-headline');
     const step1 = document.getElementById('ustep-1');
     const step2 = document.getElementById('ustep-2');
     const step3 = document.getElementById('ustep-3');
     const step4 = document.getElementById('ustep-4');
 
-    // Stage 1: File transferred (300ms)
-    setTimeout(() => {
-        if (progressBar) progressBar.style.width = '45%';
-        if (progressPercent) progressPercent.innerText = '45%';
+    if (progressBar) progressBar.style.width = '30%';
+    if (progressPercent) progressPercent.innerText = '30%';
+    if (headline) headline.innerText = 'Uploading Document...';
+    if (step1) step1.className = 'mini-step active';
+
+    try {
+        const formData = new FormData();
+        formData.append('file', file);
+
         if (step1) step1.className = 'mini-step complete';
         if (step2) step2.className = 'mini-step active';
-    }, 350);
+        if (progressBar) progressBar.style.width = '60%';
+        if (progressPercent) progressPercent.innerText = '60%';
+        if (headline) headline.innerText = 'Analyzing Evidence & Verifying Policy...';
 
-    // Stage 2: Extracting text & metadata (700ms)
-    setTimeout(() => {
-        if (progressBar) progressBar.style.width = '75%';
-        if (progressPercent) progressPercent.innerText = '75%';
-        if (step2) step2.className = 'mini-step complete';
-        if (step3) step3.className = 'mini-step active';
-    }, 750);
+        const res = await fetch('/api/claims/' + encodeURIComponent(claimId) + '/documents', {
+            method: 'POST',
+            body: formData
+        });
 
-    // Stage 3: Validating against policy clause (1100ms)
-    setTimeout(() => {
-        if (progressBar) progressBar.style.width = '95%';
-        if (progressPercent) progressPercent.innerText = '95%';
-        if (step3) step3.className = 'mini-step complete';
-        if (step4) step4.className = 'mini-step active';
-    }, 1150);
-
-    // Stage 4: Completed (1500ms)
-    setTimeout(() => {
-        if (progressBar) progressBar.style.width = '100%';
-        if (progressPercent) progressPercent.innerText = '100%';
-        if (step4) step4.className = 'mini-step complete';
-
-        // Apply state updates to activeClaim
-        const claim = state.activeClaim || (state.claimsList.length > 0 ? state.claimsList[0] : null);
-        if (claim) {
-            // 1. Remove from missing_documents
-            if (claim.completeness?.missing_documents) {
-                claim.completeness.missing_documents = claim.completeness.missing_documents.filter(d => d !== docType);
-            }
-
-            // 2. If no more missing documents, upgrade recommendation to APPROVE
-            if (claim.completeness?.missing_documents?.length === 0) {
-                claim.recommendation = 'APPROVE';
-            }
-
-            // 3. Add to evidence items
-            const fileName = state.selectedUploadFile ? state.selectedUploadFile.name : `${docTitle.replace(/\s+/g, '_')}_Verified.pdf`;
-            if (!claim.evidence_items) claim.evidence_items = [];
-            claim.evidence_items.push({
-                source_document: fileName,
-                field_name: docType,
-                value: 'Verified Valid',
-                confidence: 0.99
-            });
-
-            // 4. Add to state documentsList
-            state.documentsList.push({
-                name: fileName,
-                type: docTitle,
-                claimId: claim.claim_id,
-                date: new Date().toISOString().split('T')[0],
-                status: 'Verified'
-            });
-
-            // 5. Re-render UI components
-            updateDashboardPriorityCard();
-            renderWorkspace(claim);
-            renderDashboardRecentTable();
-            renderClaimsTable();
-            renderDocumentsTable();
-            renderMissingDocumentsView();
+        if (!res.ok) {
+            const errData = await res.json().catch(() => ({}));
+            throw new Error(errData.detail || 'Server returned error ' + res.status);
         }
 
-        // Show Success State
+        if (step2) step2.className = 'mini-step complete';
+        if (step3) step3.className = 'mini-step complete';
+        if (step4) step4.className = 'mini-step complete';
+        if (progressBar) progressBar.style.width = '100%';
+        if (progressPercent) progressPercent.innerText = '100%';
+
+        const updatedClaim = await res.json();
+
+        // Update active claim and list with real server response
+        state.activeClaim = updatedClaim;
+        const idx = state.claimsList.findIndex(c => c.claim_id === updatedClaim.claim_id);
+        if (idx >= 0) state.claimsList[idx] = updatedClaim;
+        else state.claimsList.unshift(updatedClaim);
+
+        // Add real uploaded document to state documentsList
+        state.documentsList.push({
+            name: file.name,
+            type: updatedClaim.incident_type || 'Claim Evidence',
+            claimId: updatedClaim.claim_id,
+            date: new Date().toISOString().split('T')[0],
+            status: updatedClaim.recommendation === 'APPROVE' ? 'Verified' : 'Under Review'
+        });
+
+        // Re-render UI components with real server data
+        updateDashboardPriorityCard();
+        renderWorkspace(updatedClaim);
+        renderDashboardRecentTable();
+        renderClaimsTable();
+        renderDocumentsTable();
+        renderMissingDocumentsView();
+
+        // Switch to Success State
         document.getElementById('upload-state-progress')?.classList.add('hidden');
         document.getElementById('upload-state-success')?.classList.remove('hidden');
 
         const successMsg = document.getElementById('upload-success-message');
         if (successMsg) {
-            successMsg.innerHTML = `<strong>${docTitle}</strong> has been parsed and verified. Your claim readiness is now <strong>100% Ready for Submission</strong>.`;
+            const missingCount = updatedClaim.completeness?.missing_documents?.length || 0;
+            const recLabel = updatedClaim.recommendation_label || formatRecText(updatedClaim.recommendation);
+            const statusDetail = missingCount === 0 ? 'All Documents Available' : missingCount + ' document(s) pending';
+            successMsg.innerHTML = '<strong>' + escapeHtml(file.name) + '</strong> has been processed. Readiness: <strong>' + recLabel + '</strong> (' + statusDetail + ').';
         }
 
-        showToast('Document Uploaded', `${docTitle} verified and added to ${claim ? claim.claim_id : 'claim'}.`, 'success');
+        showToast('Document Uploaded', 'Claim ' + updatedClaim.claim_id + ' re-analyzed: ' + updatedClaim.recommendation, 'success');
 
-    }, 1550);
+    } catch (err) {
+        document.getElementById('upload-state-progress')?.classList.add('hidden');
+        document.getElementById('upload-state-error')?.classList.remove('hidden');
+        const errMsg = document.getElementById('upload-error-message');
+        if (errMsg) errMsg.innerText = 'Upload or analysis failed: ' + err.message;
+        showToast('Upload Error', err.message, 'error');
+    }
 }
-
-
-/* ========================================== */
-/* ASSISTANT & OVERLAYS                       */
-/* ========================================== */
 
 function askAssistant(queryText) {
     document.getElementById('ws-assistant-input').value = queryText;

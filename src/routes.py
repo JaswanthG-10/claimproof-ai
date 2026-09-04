@@ -1,10 +1,11 @@
-import os
+﻿import os
 import sqlite3
 import json
 import shutil
+import logging
 from typing import List, Dict, Any, Optional
 from fastapi import APIRouter, Request, UploadFile, File, Form, HTTPException
-from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.responses import HTMLResponse, JSONResponse, FileResponse
 from fastapi.templating import Jinja2Templates
 
 from src.schemas import (
@@ -14,29 +15,22 @@ from src.schemas import (
     CompletenessResult,
     Finding,
     FindingStatus,
-    Severity
+    Severity,
+    PolicyClause
 )
-from src.parser import parse_document, ParsedDocument
-from src.extraction import extract_document_evidence
-from src.evidence import EvidenceStore, detect_contradictions, build_claim_data
-from src.policy_index import PolicyIndex
-from src.policy_reasoner import analyze_policy_clauses
-from src.rules import check_document_completeness, check_policy_validity, check_idv_limits
-from src.decision import evaluate_recommendation, generate_gemini_explanation
+from src.policy_index import load_policy_clauses_from_file
+from src.claim_analysis import analyze_claim_package, get_shared_policy_index
+from src.file_security import sanitize_filename, validate_claim_id, validate_file_upload
 
-
+logger = logging.getLogger(__name__)
 router = APIRouter()
 templates = Jinja2Templates(directory="templates")
-
-# Initialize global FAISS index
-policy_index = PolicyIndex()
-policy_index.load_or_build()
 
 DB_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "claimproof.db")
 
 
 def init_sqlite_db():
-    """Initialize SQLite database tables if not existing."""
+    """Initialize SQLite database tables with proper indexing."""
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
 
@@ -49,6 +43,7 @@ def init_sqlite_db():
         incident_date TEXT,
         claimed_amount REAL,
         recommendation TEXT,
+        recommendation_label TEXT,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
     """)
@@ -58,7 +53,8 @@ def init_sqlite_db():
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         claim_id TEXT,
         filename TEXT,
-        document_type TEXT
+        document_type TEXT,
+        uploaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
     """)
 
@@ -70,7 +66,8 @@ def init_sqlite_db():
         field_name TEXT,
         field_value TEXT,
         source_page INTEGER,
-        confidence REAL
+        confidence REAL,
+        raw_text TEXT
     );
     """)
 
@@ -82,7 +79,8 @@ def init_sqlite_db():
         status TEXT,
         description TEXT,
         severity TEXT,
-        policy_clause TEXT
+        policy_clause TEXT,
+        policy_page INTEGER
     );
     """)
 
@@ -91,8 +89,10 @@ def init_sqlite_db():
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         claim_id TEXT,
         recommendation TEXT,
+        recommendation_label TEXT,
         explanation TEXT,
-        raw_json TEXT
+        raw_json TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
     """)
 
@@ -104,126 +104,71 @@ init_sqlite_db()
 
 
 def save_review_to_db(review: ClaimReview):
-    """Save claim review results to SQLite database."""
+    """
+    Save or update claim review in SQLite database.
+    Cleans previous evidence, findings, and reviews for this claim_id to prevent duplicate row accumulation.
+    """
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
 
-    cursor.execute(
-        "INSERT OR REPLACE INTO claims (id, customer_name, vehicle_number, incident_type, incident_date, claimed_amount, recommendation) VALUES (?, ?, ?, ?, ?, ?, ?)",
-        (
-            review.claim_id,
-            review.customer_name,
-            review.vehicle_number,
-            review.incident_type,
-            review.incident_date,
-            review.claimed_amount,
-            review.recommendation.value
-        )
-    )
-
-    for item in review.evidence_items:
+    try:
+        # 1. Update or replace claims record
         cursor.execute(
-            "INSERT INTO evidence (claim_id, filename, field_name, field_value, source_page, confidence) VALUES (?, ?, ?, ?, ?, ?)",
-            (review.claim_id, item.source_document, item.field_name, item.value, item.page_number, item.confidence)
+            """INSERT OR REPLACE INTO claims 
+            (id, customer_name, vehicle_number, incident_type, incident_date, claimed_amount, recommendation, recommendation_label) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
+            (
+                review.claim_id,
+                review.customer_name,
+                review.vehicle_number,
+                review.incident_type,
+                review.incident_date,
+                review.claimed_amount,
+                review.recommendation.value,
+                review.recommendation_label
+            )
         )
 
-    for f in review.findings:
-        cursor.execute(
-            "INSERT INTO findings (claim_id, category, status, description, severity, policy_clause) VALUES (?, ?, ?, ?, ?, ?)",
-            (review.claim_id, f.category, f.status.value, f.description, f.severity.value, f.policy_clause)
-        )
+        # 2. Clean previous child records to prevent accumulation upon re-analysis
+        cursor.execute("DELETE FROM evidence WHERE claim_id = ?", (review.claim_id,))
+        cursor.execute("DELETE FROM findings WHERE claim_id = ?", (review.claim_id,))
+        cursor.execute("DELETE FROM reviews WHERE claim_id = ?", (review.claim_id,))
 
-    cursor.execute(
-        "INSERT INTO reviews (claim_id, recommendation, explanation, raw_json) VALUES (?, ?, ?, ?)",
-        (review.claim_id, review.recommendation.value, review.explanation, review.model_dump_json())
-    )
-
-    conn.commit()
-    conn.close()
-
-
-def process_claim_folder(claim_id: str, folder_path: str) -> ClaimReview:
-    """Analyze a claim package directory end-to-end."""
-    if not os.path.exists(folder_path):
-        raise HTTPException(status_code=404, detail=f"Claim folder not found: {folder_path}")
-
-    files = [os.path.join(folder_path, f) for f in os.listdir(folder_path) if os.path.isfile(os.path.join(folder_path, f))]
-
-    parsed_docs: List[ParsedDocument] = []
-    store = EvidenceStore()
-
-    for fpath in files:
-        doc = parse_document(fpath)
-        parsed_docs.append(doc)
-        evidence_items = extract_document_evidence(doc)
-        store.add_items(evidence_items)
-
-    # 1. Build aggregated ClaimData
-    claim_data = build_claim_data(claim_id, store)
-
-    # 2. Detect Cross-Document Contradictions
-    contradictions = detect_contradictions(store)
-
-    # 3. Check Document Completeness
-    completeness = check_document_completeness(claim_data.incident_type or "accident", parsed_docs)
-
-    # 4. Perform FAISS Policy Retrieval & Reasoning
-    policy_assessments = analyze_policy_clauses(claim_data, policy_index)
-
-    # 5. Execute Deterministic Rule Checks
-    validity_findings = check_policy_validity(claim_data)
-    idv_findings = check_idv_limits(claim_data)
-
-    all_findings: List[Finding] = validity_findings + idv_findings
-
-    # Map policy assessments into findings for display
-    for pa in policy_assessments:
-        if pa.classification in [FindingStatus.SUPPORTED, FindingStatus.BLOCKED, FindingStatus.UNCERTAIN]:
-            sev = Severity.CRITICAL if pa.classification == FindingStatus.BLOCKED else Severity.INFO
-            all_findings.append(
-                Finding(
-                    category=pa.category,
-                    status=pa.classification,
-                    description=pa.reasoning,
-                    severity=sev,
-                    policy_clause=pa.clause_id
-                )
+        # 3. Insert fresh evidence items
+        for item in review.evidence_items:
+            cursor.execute(
+                """INSERT INTO evidence 
+                (claim_id, filename, field_name, field_value, source_page, confidence, raw_text) 
+                VALUES (?, ?, ?, ?, ?, ?, ?)""",
+                (review.claim_id, item.source_document, item.field_name, item.value, item.page_number, item.confidence, item.raw_text)
             )
 
-    # 6. Evaluate Recommendation Engine
-    rec_result = evaluate_recommendation(
-        completeness=completeness,
-        contradictions=contradictions,
-        policy_assessments=policy_assessments,
-        findings=all_findings
-    )
+        # 4. Insert fresh findings
+        for f in review.findings:
+            cursor.execute(
+                """INSERT INTO findings 
+                (claim_id, category, status, description, severity, policy_clause, policy_page) 
+                VALUES (?, ?, ?, ?, ?, ?, ?)""",
+                (review.claim_id, f.category, f.status.value, f.description, f.severity.value, f.policy_clause, f.policy_page)
+            )
 
-    # 7. Generate Gemini narrative explanation
-    explanation = generate_gemini_explanation(claim_data, rec_result)
+        # 5. Insert fresh review snapshot
+        cursor.execute(
+            """INSERT INTO reviews 
+            (claim_id, recommendation, recommendation_label, explanation, raw_json) 
+            VALUES (?, ?, ?, ?, ?)""",
+            (review.claim_id, review.recommendation.value, review.recommendation_label, review.explanation, review.model_dump_json())
+        )
 
-    review = ClaimReview(
-        claim_id=claim_id,
-        customer_name=claim_data.customer_name or "Unknown Claimant",
-        vehicle_number=claim_data.vehicle_number or "Unknown Vehicle",
-        incident_type=claim_data.incident_type or "accident",
-        incident_date=claim_data.incident_date or "Not specified",
-        claimed_amount=claim_data.claimed_amount or 0.0,
-        recommendation=rec_result.recommendation,
-        completeness=completeness,
-        evidence_items=store.items,
-        contradictions=contradictions,
-        findings=all_findings,
-        policy_assessments=policy_assessments,
-        explanation=explanation
-    )
-
-    save_review_to_db(review)
-    return review
+        conn.commit()
+    except Exception as e:
+        logger.error(f"Failed to persist review to SQLite: {e}")
+        conn.rollback()
+    finally:
+        conn.close()
 
 
-from fastapi.responses import HTMLResponse, JSONResponse, FileResponse
-
-# HTTP Routes
+# Static and Health Routes
 @router.get("/", response_class=FileResponse)
 async def serve_dashboard():
     return FileResponse("templates/index.html")
@@ -232,16 +177,29 @@ async def serve_dashboard():
 @router.get("/health")
 async def health_check():
     gemini_key = os.environ.get("GEMINI_API_KEY")
+    p_index = get_shared_policy_index()
+    clauses = p_index.clauses
+
+    db_ok = os.path.exists(DB_PATH)
+
     return {
         "status": "ok",
         "gemini_configured": bool(gemini_key),
-        "policy_index_loaded": policy_index.index is not None
+        "policy_index_loaded": p_index.index is not None or p_index.matrix is not None,
+        "policy_clauses_count": len(clauses),
+        "embedding_provider": p_index.provider,
+        "database_connected": db_ok
     }
+
+
+@router.get("/api/policy/clauses", response_model=List[PolicyClause])
+async def get_policy_clauses():
+    """Single source of truth for synthetic policy clauses."""
+    return load_policy_clauses_from_file()
 
 
 @router.get("/api/demo-cases")
 async def get_demo_cases():
-    base_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data", "claims")
     cases = [
         {
             "id": "claim_001_approve",
@@ -273,12 +231,14 @@ async def get_demo_cases():
 
 @router.post("/api/demo-cases/{case_id}/analyze")
 async def analyze_demo_case(case_id: str):
+    valid_case_id = validate_claim_id(case_id)
     base_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data", "claims")
-    folder_path = os.path.join(base_dir, case_id)
+    folder_path = os.path.join(base_dir, valid_case_id)
     if not os.path.exists(folder_path):
-        raise HTTPException(status_code=404, detail=f"Demo case folder '{case_id}' not found.")
+        raise HTTPException(status_code=404, detail=f"Demo case folder '{valid_case_id}' not found.")
 
-    review = process_claim_folder(case_id, folder_path)
+    review = analyze_claim_package(valid_case_id, folder_path)
+    save_review_to_db(review)
     return review.model_dump()
 
 
@@ -287,13 +247,75 @@ async def analyze_uploaded_claim(
     claim_id: str = Form("claim_custom"),
     files: List[UploadFile] = File(...)
 ):
-    upload_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data", "claims", claim_id)
+    safe_claim_id = validate_claim_id(claim_id)
+    upload_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data", "claims", safe_claim_id)
     os.makedirs(upload_dir, exist_ok=True)
 
     for file in files:
-        file_path = os.path.join(upload_dir, file.filename)
+        content = await file.read()
+        safe_filename = validate_file_upload(file.filename, content)
+        file_path = os.path.join(upload_dir, safe_filename)
         with open(file_path, "wb") as buffer:
-            shutil.copyfileobj(file.file, buffer)
+            buffer.write(content)
 
-    review = process_claim_folder(claim_id, upload_dir)
+    review = analyze_claim_package(safe_claim_id, upload_dir)
+    save_review_to_db(review)
     return review.model_dump()
+
+
+@router.post("/api/claims/{claim_id}/documents")
+async def upload_document_to_claim(
+    claim_id: str,
+    file: UploadFile = File(...)
+):
+    """
+    Real document upload endpoint:
+    - Validates file security and claim ID.
+    - Saves document to claim directory.
+    - Re-runs complete analysis pipeline end-to-end.
+    - Persists updated review cleanly.
+    - Returns updated ClaimReview payload.
+    """
+    safe_claim_id = validate_claim_id(claim_id)
+    base_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data", "claims")
+    claim_dir = os.path.join(base_dir, safe_claim_id)
+
+    # If folder doesn't exist, create it (or copy base documents if CLM-CUSTOM-001 based on claim_002)
+    if not os.path.exists(claim_dir):
+        os.makedirs(claim_dir, exist_ok=True)
+        # If user is repairing claim_002 (e.g. adding DL to claim_002), make sure base files exist
+        if safe_claim_id in ["CLM-CUSTOM-001", "claim_002_request_information"]:
+            src_folder = os.path.join(base_dir, "claim_002_request_information")
+            if os.path.exists(src_folder) and src_folder != claim_dir:
+                for sf in os.listdir(src_folder):
+                    shutil.copy2(os.path.join(src_folder, sf), os.path.join(claim_dir, sf))
+
+    content = await file.read()
+    safe_name = validate_file_upload(file.filename, content)
+
+    target_path = os.path.join(claim_dir, safe_name)
+    with open(target_path, "wb") as f:
+        f.write(content)
+
+    logger.info(f"Saved uploaded document '{safe_name}' to {claim_dir}. Re-analyzing claim package...")
+
+    # Re-run full end-to-end pipeline
+    updated_review = analyze_claim_package(safe_claim_id, claim_dir)
+    save_review_to_db(updated_review)
+
+    return updated_review.model_dump()
+
+
+@router.get("/api/claims/{claim_id}")
+async def get_claim_details(claim_id: str):
+    safe_id = validate_claim_id(claim_id)
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    cursor.execute("SELECT raw_json FROM reviews WHERE claim_id = ? ORDER BY id DESC LIMIT 1", (safe_id,))
+    row = cursor.fetchone()
+    conn.close()
+
+    if not row:
+        raise HTTPException(status_code=404, detail=f"No saved review found for claim '{safe_id}'.")
+
+    return json.loads(row[0])
