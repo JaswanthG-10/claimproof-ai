@@ -3,11 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ClaimProof AI | Insurance Claims Evidence Review Assistant</title>
-    <!-- Google Font: Inter -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <title>ClaimProof AI | Smart Claim Checker</title>
     <!-- Three.js for 3D Node Animation -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <link rel="stylesheet" href="/static/styles.css">
@@ -15,68 +11,66 @@
 <body>
 
     <!-- ========================================== -->
-    <!-- PART 3 — SPLIT-SCREEN 3D MOTION LOGIN PAGE -->
+    <!-- CREDENTIAL-LESS GLASSMORPHISM LOGIN PAGE   -->
     <!-- ========================================== -->
     <div id="welcome-screen" class="welcome-split-container">
         
-        <!-- LEFT PANEL (~58%): 3D MOTION GRAPHICS -->
+        <!-- LEFT PANEL (~58%): 3D VIOLET MOTION GRAPHICS -->
         <div class="login-3d-panel">
             <canvas id="canvas-3d"></canvas>
             <div class="panel-3d-overlay">
                 <div class="badge-tag info-pill mb-16">
                     <span class="dot-live"></span>
-                    <span>AI EVIDENCE GRAPH ENGINE</span>
+                    <span>AI EVIDENCE CHECKER</span>
                 </div>
-                <h1 class="panel-3d-title">Intelligent Evidence Analysis</h1>
-                <p class="panel-3d-subtitle">Automated verification connecting documents → evidence → policy → recommendations in seconds.</p>
+                <h1 class="panel-3d-title">Smart Claim Checker</h1>
+                <p class="panel-3d-subtitle">Instant motor insurance evidence verification connecting your documents, coverage, and claim recommendation in seconds.</p>
                 <div class="node-labels-preview mt-24">
-                    <span class="node-chip active"><span class="chip-dot"></span> Documents</span>
+                    <span class="node-chip active"><span class="chip-dot"></span> Upload Docs</span>
                     <span class="node-arrow">→</span>
-                    <span class="node-chip active"><span class="chip-dot"></span> Evidence</span>
+                    <span class="node-chip active"><span class="chip-dot"></span> Extract Evidence</span>
                     <span class="node-arrow">→</span>
-                    <span class="node-chip active"><span class="chip-dot"></span> Policy Grounding</span>
+                    <span class="node-chip active"><span class="chip-dot"></span> Verify Coverage</span>
                     <span class="node-arrow">→</span>
-                    <span class="node-chip active"><span class="chip-dot"></span> Recommendation</span>
+                    <span class="node-chip active"><span class="chip-dot"></span> AI Decision</span>
                 </div>
             </div>
         </div>
 
-        <!-- RIGHT PANEL (~42%): LOGIN FORM PANEL -->
+        <!-- RIGHT PANEL (~42%): CREDENTIAL-LESS GLASS FORM -->
         <div class="login-form-panel">
-            <div class="form-card-box">
+            <div class="form-card-box glass-card">
                 <div class="login-logo-row">
                     <div class="logo-mark">
-                        <svg width="28" height="28" viewBox="0 0 32 32" fill="none">
-                            <rect x="4" y="4" width="24" height="24" rx="6" fill="#2563EB" fill-opacity="0.2" stroke="#2563EB" stroke-width="2"/>
-                            <path d="M10 16L14 20L22 12" stroke="#38BDF8" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+                            <rect x="3" y="3" width="26" height="26" rx="8" fill="#9333EA" fill-opacity="0.25" stroke="#A855F7" stroke-width="2"/>
+                            <path d="M10 16L14 20L22 12" stroke="#E879F9" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
                         </svg>
                     </div>
                     <span class="brand-name">ClaimProof AI</span>
                 </div>
 
-                <h2 class="form-title mt-24">Sign in to your workspace</h2>
-                <p class="form-subtitle">Enter your credentials to access the claims review workspace.</p>
+                <h2 class="form-title mt-24">Smart Claim Checker</h2>
+                <p class="form-subtitle">Evidence you can verify. Instant one-click workspace access for policyholders.</p>
 
                 <form id="login-form" onsubmit="handleLoginSubmit(event)" class="mt-24">
-                    <div class="field-group">
-                        <label class="field-label">Work Email</label>
-                        <input type="email" id="login-email" class="input-field" value="jaswant@claimproof.ai" placeholder="name@company.com" required>
-                        <span id="email-error-msg" class="field-error-text hidden">✕ Please enter a valid work email.</span>
-                    </div>
-
-                    <div class="field-group mt-16">
-                        <div class="field-label-row">
-                            <label class="field-label">Password</label>
-                            <a href="#" class="btn-tertiary-link" onclick="showToast('Password Reset', 'Password reset instructions sent to your email.', 'info'); return false;">Forgot password?</a>
+                    <div class="guest-welcome-badge mb-20">
+                        <span class="badge-icon">👤</span>
+                        <div class="guest-info">
+                            <strong>Jaswanth G. (Policyholder)</strong>
+                            <span>Policy No: POL-2026-88492</span>
                         </div>
-                        <input type="password" id="login-password" class="input-field" value="••••••••••••" placeholder="Enter your password" required>
                     </div>
 
-                    <button type="submit" id="login-submit-btn" class="btn-primary full-width mt-24">
-                        <span id="login-btn-text">Sign In →</span>
+                    <button type="submit" id="login-submit-btn" class="btn-primary full-width mt-16 btn-glass-glow">
+                        <span id="login-btn-text">Enter Workspace →</span>
                         <span id="login-btn-spinner" class="inline-spinner hidden"></span>
                     </button>
                 </form>
+
+                <div class="login-footer-meta mt-24">
+                    <span>Protected by ClaimProof AI Instant Verification Engine</span>
+                </div>
             </div>
         </div>
 
@@ -88,49 +82,96 @@
     <!-- ========================================== -->
     <div id="app-shell" class="app-shell hidden">
 
-        <!-- SIDEBAR NAVIGATION -->
+        <!-- USER SIDEBAR NAVIGATION -->
         <aside id="sidebar" class="sidebar">
             <div class="sidebar-header">
                 <div class="sidebar-brand">
                     <div class="brand-logo-icon">
-                        <svg width="22" height="22" viewBox="0 0 32 32" fill="none">
-                            <rect x="4" y="4" width="24" height="24" rx="6" fill="#2563EB" fill-opacity="0.2" stroke="#2563EB" stroke-width="2"/>
-                            <path d="M10 16L14 20L22 12" stroke="#38BDF8" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        <svg width="24" height="24" viewBox="0 0 32 32" fill="none">
+                            <rect x="3" y="3" width="26" height="26" rx="8" fill="#9333EA" fill-opacity="0.25" stroke="#A855F7" stroke-width="2"/>
+                            <path d="M10 16L14 20L22 12" stroke="#E879F9" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
                         </svg>
                     </div>
                     <div class="brand-text-group">
                         <span class="sidebar-brand-title">ClaimProof AI</span>
-                        <span class="sidebar-brand-sub">Claims Intelligence</span>
+                        <span class="sidebar-brand-sub">Smart Claim Checker</span>
                     </div>
                 </div>
             </div>
 
             <nav class="sidebar-nav">
+                <!-- SECTION: HOME -->
                 <div class="nav-section">
-                    <span class="nav-section-title">NAVIGATION</span>
+                    <span class="nav-section-title">HOME</span>
                     <a href="#" class="nav-item active" data-view="dashboard">
-                        <svg class="nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/></svg>
-                        <span class="nav-label">Dashboard</span>
+                        <span class="nav-symbol">⌂</span>
+                        <span class="nav-label">Home</span>
                     </a>
-                    <a href="#" class="nav-item" data-view="documents">
-                        <svg class="nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
-                        <span class="nav-label">Document Library</span>
+                </div>
+
+                <!-- SECTION: CLAIMS -->
+                <div class="nav-section">
+                    <span class="nav-section-title">CLAIMS</span>
+                    <a href="#" class="nav-item" onclick="openNewClaimModal(); return false;">
+                        <span class="nav-symbol">＋</span>
+                        <span class="nav-label">Start New Claim</span>
                     </a>
-                    <a href="#" class="nav-item" data-view="workspace">
-                        <svg class="nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
-                        <span class="nav-label">Claim Review Center</span>
-                    </a>
-                    <a href="#" class="nav-item" data-view="claims">
-                        <svg class="nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-                        <span class="nav-label">Claims List</span>
+                    <a href="#" class="nav-item" data-view="my-claims">
+                        <span class="nav-symbol">▣</span>
+                        <span class="nav-label">My Claims</span>
                         <span class="nav-badge" id="sidebar-claims-count">4</span>
                     </a>
-                    <a href="#" class="nav-item" data-view="policies">
-                        <svg class="nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-                        <span class="nav-label">Policy Library</span>
+                    <a href="#" class="nav-item" data-view="workspace">
+                        <span class="nav-symbol">✦</span>
+                        <span class="nav-label">AI Claim Check</span>
                     </a>
+                </div>
+
+                <!-- SECTION: DOCUMENTS -->
+                <div class="nav-section">
+                    <span class="nav-section-title">DOCUMENTS</span>
+                    <a href="#" class="nav-item" data-view="documents">
+                        <span class="nav-symbol">□</span>
+                        <span class="nav-label">My Documents</span>
+                    </a>
+                    <a href="#" class="nav-item" data-view="missing-documents">
+                        <span class="nav-symbol">!</span>
+                        <span class="nav-label">Missing Documents</span>
+                        <span class="nav-badge alert-badge" id="sidebar-missing-count">1</span>
+                    </a>
+                </div>
+
+                <!-- SECTION: POLICY -->
+                <div class="nav-section">
+                    <span class="nav-section-title">POLICY</span>
+                    <a href="#" class="nav-item" data-view="policies">
+                        <span class="nav-symbol">⌕</span>
+                        <span class="nav-label">My Coverage</span>
+                    </a>
+                    <a href="#" class="nav-item" data-view="policy-details">
+                        <span class="nav-symbol">📖</span>
+                        <span class="nav-label">Policy Details</span>
+                    </a>
+                </div>
+
+                <!-- SECTION: TRACKING -->
+                <div class="nav-section">
+                    <span class="nav-section-title">TRACKING</span>
+                    <a href="#" class="nav-item" data-view="claim-status">
+                        <span class="nav-symbol">◷</span>
+                        <span class="nav-label">Claim Status</span>
+                    </a>
+                    <a href="#" class="nav-item" data-view="claim-report">
+                        <span class="nav-symbol">▤</span>
+                        <span class="nav-label">Claim Report</span>
+                    </a>
+                </div>
+
+                <!-- SECTION: ACCOUNT -->
+                <div class="nav-section">
+                    <span class="nav-section-title">ACCOUNT</span>
                     <a href="#" class="nav-item" data-view="settings">
-                        <svg class="nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                        <span class="nav-symbol">⚙</span>
                         <span class="nav-label">Settings</span>
                     </a>
                 </div>
@@ -141,7 +182,7 @@
                     <div class="avatar-circle">JG</div>
                     <div class="user-info-text">
                         <span class="user-name">Jaswanth G.</span>
-                        <span class="user-role">Senior Claims Officer</span>
+                        <span class="user-role">Policyholder</span>
                     </div>
                 </div>
             </div>
@@ -156,14 +197,14 @@
                     <div class="breadcrumb-bar">
                         <span class="bc-root">ClaimProof AI</span>
                         <span class="bc-sep">/</span>
-                        <span id="breadcrumb-current" class="bc-current">Dashboard</span>
+                        <span id="breadcrumb-current" class="bc-current">Home</span>
                     </div>
                 </div>
 
                 <div class="header-right">
                     <button id="cmd-search-trigger" class="header-search-bar">
                         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-                        <span>Search claims, documents or policy...</span>
+                        <span>Search your claims, policy, or documents...</span>
                         <kbd class="kbd-pill">Ctrl K</kbd>
                     </button>
 
@@ -171,7 +212,7 @@
                         <div class="user-avatar-sm">JG</div>
                         <div class="user-name-wrapper">
                             <span class="user-display-name">Jaswanth G.</span>
-                            <span class="user-email-label">jaswant@claimproof.ai</span>
+                            <span class="user-email-label">jaswanth@claimproof.ai</span>
                         </div>
                     </div>
                 </div>
@@ -181,57 +222,57 @@
             <!-- MAIN CONTENT CONTAINER -->
             <main class="main-content">
 
-                <!-- 02. DASHBOARD VIEW -->
+                <!-- 01. HOME (DASHBOARD) VIEW -->
                 <div id="view-dashboard" class="content-view">
                     
-                    <div class="dashboard-hero-panel">
+                    <div class="dashboard-hero-panel glass-hero">
                         <div class="hero-text-area">
-                            <h2 class="hero-heading">Welcome back, Jaswanth G.</h2>
-                            <p class="hero-body">You have 4 claims ready for evaluation and 5 cases requiring review action.</p>
+                            <h2 class="hero-heading">Welcome, Jaswanth G.</h2>
+                            <p class="hero-body">Track your active motor insurance claims, check coverage, and verify document completeness with AI evidence checking.</p>
                         </div>
                         <div class="hero-action-area">
-                            <button class="btn-primary" onclick="openNewClaimModal()">
-                                <span>+ New Claim Review</span>
+                            <button class="btn-primary btn-glass-glow" onclick="openNewClaimModal()">
+                                <span>＋ Start New Claim</span>
                             </button>
                         </div>
                     </div>
 
                     <!-- 4 Metric Cards Grid -->
                     <div class="metrics-grid">
-                        <div class="metric-card-ent">
-                            <span class="metric-title">Claims Reviewed</span>
-                            <div class="metric-value-num">24</div>
-                            <span class="metric-sub positive">↑ 12% this week</span>
+                        <div class="metric-card-ent glass-card">
+                            <span class="metric-title">Active Claims</span>
+                            <div class="metric-value-num">4</div>
+                            <span class="metric-sub positive">✓ 1 Ready for payout</span>
                         </div>
 
-                        <div class="metric-card-ent">
-                            <span class="metric-title">Needs Review</span>
-                            <div class="metric-value-num">5</div>
-                            <span class="metric-sub neutral">Requires investigator action</span>
+                        <div class="metric-card-ent glass-card">
+                            <span class="metric-title">AI Claim Status</span>
+                            <div class="metric-value-num">Verified</div>
+                            <span class="metric-sub neutral">Instant AI Evidence Check</span>
                         </div>
 
-                        <div class="metric-card-ent">
+                        <div class="metric-card-ent glass-card">
                             <span class="metric-title">Missing Documents</span>
-                            <div class="metric-value-num">7</div>
-                            <span class="metric-sub danger">Driving Licence / FIR gaps</span>
+                            <div class="metric-value-num">1</div>
+                            <span class="metric-sub danger">Action required</span>
                         </div>
 
-                        <div class="metric-card-ent">
-                            <span class="metric-title">Completed Reviews</span>
-                            <div class="metric-value-num">19</div>
-                            <span class="metric-sub positive">98.4% grounded accuracy</span>
+                        <div class="metric-card-ent glass-card">
+                            <span class="metric-title">Coverage Limit</span>
+                            <div class="metric-value-num">₹5,00,000</div>
+                            <span class="metric-sub positive">100% Comprehensive</span>
                         </div>
                     </div>
 
                     <!-- Split Grid: Recent Claims + Interactive Demo Cases -->
                     <div class="grid-split-2col mt-24">
-                        <div class="card-enterprise">
+                        <div class="card-enterprise glass-card">
                             <div class="card-header-flex">
                                 <div>
-                                    <h3 class="card-title">Recent Claim Reviews</h3>
-                                    <span class="card-subtitle">Latest evidence evaluations and review actions</span>
+                                    <h3 class="card-title">My Recent Claims</h3>
+                                    <span class="card-subtitle">Your submitted claim checks and AI evaluation status</span>
                                 </div>
-                                <button class="btn-tertiary-link" onclick="navigateTo('claims')">View All →</button>
+                                <button class="btn-tertiary-link" onclick="navigateTo('my-claims')">View All →</button>
                             </div>
 
                             <div class="table-container mt-16">
@@ -239,10 +280,10 @@
                                     <thead>
                                         <tr>
                                             <th>Claim ID</th>
-                                            <th>Customer / Vehicle</th>
-                                            <th>Incident Type</th>
-                                            <th>Amount</th>
-                                            <th>Suggested Next Step</th>
+                                            <th>Vehicle Registration</th>
+                                            <th>Type</th>
+                                            <th>Claimed Amount</th>
+                                            <th>AI Decision</th>
                                             <th>Action</th>
                                         </tr>
                                     </thead>
@@ -251,41 +292,41 @@
                             </div>
                         </div>
 
-                        <div class="card-enterprise">
-                            <h3 class="card-title">⚡ Interactive Demo Claims</h3>
-                            <span class="card-subtitle">Test synthetic motor claim evaluations instantly</span>
+                        <div class="card-enterprise glass-card">
+                            <h3 class="card-title">⚡ Interactive Demo Claim Scenarios</h3>
+                            <span class="card-subtitle">Select any claim scenario to test instant AI checking</span>
 
                             <div class="demo-stack mt-16">
                                 <div class="demo-item-row approve" onclick="runDemoClaim('claim_001_approve')">
                                     <div>
-                                        <strong>Case 1: Standard Accident Claim</strong>
+                                        <strong>Standard Accident Claim</strong>
                                         <span>Complete docs, valid dates, repair estimate within limit</span>
                                     </div>
-                                    <span class="status-badge approve">✓ APPROVE</span>
+                                    <span class="status-badge approve">✓ APPROVED</span>
                                 </div>
 
                                 <div class="demo-item-row request" onclick="runDemoClaim('claim_002_request_information')">
                                     <div>
-                                        <strong>Case 2: Missing Driving Licence</strong>
+                                        <strong>Missing Driving Licence</strong>
                                         <span>Missing mandatory Driving Licence document</span>
                                     </div>
-                                    <span class="status-badge request">⚠ REQ INFO</span>
+                                    <span class="status-badge request">⚠ NEED INFO</span>
                                 </div>
 
                                 <div class="demo-item-row escalate" onclick="runDemoClaim('claim_003_escalate')">
                                     <div>
-                                        <strong>Case 3: Date Contradiction</strong>
+                                        <strong>Date Contradiction</strong>
                                         <span>Claim Form date (Aug 21) vs Police FIR date (Aug 22)</span>
                                     </div>
-                                    <span class="status-badge escalate">▲ ESCALATE</span>
+                                    <span class="status-badge escalate">▲ UNDER REVIEW</span>
                                 </div>
 
                                 <div class="demo-item-row reject" onclick="runDemoClaim('claim_004_reject')">
                                     <div>
-                                        <strong>Case 4: Prohibited Commercial Use</strong>
+                                        <strong>Prohibited Commercial Use</strong>
                                         <span>Vehicle operated as commercial ride-share taxi</span>
                                     </div>
-                                    <span class="status-badge reject">✕ REJECT</span>
+                                    <span class="status-badge reject">✕ REJECTED</span>
                                 </div>
                             </div>
                         </div>
@@ -294,57 +335,114 @@
                 </div>
 
 
-                <!-- 03. CLAIM REVIEW CENTER (WORKSPACE VIEW) -->
+                <!-- 02. MY CLAIMS VIEW -->
+                <div id="view-my-claims" class="content-view hidden">
+                    <div class="card-enterprise glass-card">
+                        <div class="card-header-flex">
+                            <div>
+                                <h3 class="card-title">My Claims</h3>
+                                <span class="card-subtitle">Track status and AI evaluation for all your submitted claims</span>
+                            </div>
+                            <button class="btn-primary" onclick="openNewClaimModal()">＋ Start New Claim</button>
+                        </div>
+
+                        <div class="filter-bar mt-16">
+                            <div class="pill-filters" id="claims-filter-pills">
+                                <button class="filter-pill active" data-filter="all">All Claims</button>
+                                <button class="filter-pill" data-filter="APPROVE">Approved</button>
+                                <button class="filter-pill" data-filter="REQUEST_INFORMATION">Action Required</button>
+                                <button class="filter-pill" data-filter="ESCALATE">Under Review</button>
+                                <button class="filter-pill" data-filter="REJECT">Rejected</button>
+                            </div>
+                            <input type="text" id="claims-search-input" class="input-field search-input" placeholder="Search claim ID or vehicle...">
+                        </div>
+
+                        <div class="table-container mt-16">
+                            <table class="saas-table-ent">
+                                <thead>
+                                    <tr>
+                                        <th>Claim ID</th>
+                                        <th>Claimant Name</th>
+                                        <th>Vehicle Number</th>
+                                        <th>Incident Type</th>
+                                        <th>Incident Date</th>
+                                        <th>Claimed Amount</th>
+                                        <th>AI Decision</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="claims-table-body"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+
+                <!-- 03. AI CLAIM CHECK (REVIEW CENTER VIEW) -->
                 <div id="view-workspace" class="content-view hidden">
                     
-                    <!-- UN-CONCATENATED SEPARATE HEADER -->
-                    <div class="workspace-header">
+                    <!-- WORKSPACE HEADER -->
+                    <div class="workspace-header glass-card p-16">
                         <div class="ws-header-left">
-                            <button class="btn-secondary" onclick="navigateTo('claims')">← Claims</button>
+                            <button class="btn-secondary" onclick="navigateTo('my-claims')">← My Claims</button>
                             <h2 id="ws-claim-id" class="ws-title">CLM-CUSTOM-001</h2>
                             <span id="ws-incident-badge" class="badge-neutral">Accident</span>
-                            <span id="ws-status-badge" class="badge-status warning">⚠ Needs information</span>
+                            <span id="ws-status-badge" class="badge-status warning">⚠ Needs Action</span>
                         </div>
                         <div class="ws-header-right">
-                            <button class="btn-secondary" onclick="showToast('Download Report', 'Report downloaded successfully.', 'info')">
+                            <button class="btn-secondary" onclick="showToast('Claim Report', 'Claim Report downloaded successfully.', 'info')">
                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
                                 <span>Download Report</span>
                             </button>
                         </div>
                     </div>
 
+                    <!-- USER DECISION OUTCOME BANNER (APPROVED VS REJECTED/ACTION REQUIRED WITH TRY AGAIN) -->
+                    <div id="user-ai-decision-banner" class="ai-decision-banner mt-20 glass-card">
+                        <div class="banner-icon-col" id="banner-icon-box">✓</div>
+                        <div class="banner-content-col">
+                            <span class="banner-kicker">AI DECISION RESULT</span>
+                            <h2 id="banner-decision-title" class="banner-title">APPROVED</h2>
+                            <p id="banner-decision-reason" class="banner-reason">Your claim package satisfies all policy requirements and is verified for payout.</p>
+                        </div>
+                        <div class="banner-action-col" id="banner-action-box">
+                            <button id="banner-primary-btn" class="btn-primary btn-glass-glow" onclick="showToast('Success', 'Proceeding with claim payout settlement.', 'success')">Proceed to Payout →</button>
+                        </div>
+                    </div>
+
                     <!-- 3-COLUMN RESPONSIVE GRID -->
                     <div class="workspace-3col-grid mt-20">
                         
-                        <!-- LEFT RAIL: DOCUMENTS & EVIDENCE -->
-                        <div class="ws-rail-left card-enterprise">
+                        <!-- LEFT RAIL: DOCUMENT CHECKLIST -->
+                        <div class="ws-rail-left card-enterprise glass-card">
                             <div class="rail-header">
-                                <h4 class="card-title">Documents & Evidence</h4>
-                                <span id="ws-doc-counter" class="metadata-text">1 / 5 received</span>
+                                <h4 class="card-title">Document Checklist</h4>
+                                <span id="ws-doc-counter" class="metadata-text">4 / 5 received</span>
                             </div>
 
                             <div class="doc-group mt-16">
-                                <span class="group-label">MISSING</span>
+                                <span class="group-label">MISSING DOCUMENTS</span>
                                 <div id="ws-doc-missing-list" class="doc-status-stack mt-8"></div>
                             </div>
 
                             <div class="doc-group mt-16">
-                                <span class="group-label">AVAILABLE</span>
+                                <span class="group-label">IMPORTED DOCUMENTS</span>
                                 <div id="ws-doc-available-list" class="doc-status-stack mt-8"></div>
                             </div>
 
-                            <button class="btn-tertiary-link mt-16" onclick="navigateTo('policies')">Open Policy Library →</button>
+                            <button class="btn-tertiary-link mt-16" onclick="navigateTo('policies')">View My Policy Coverage →</button>
                         </div>
 
-                        <!-- CENTER MAIN ANALYSIS AREA -->
+                        <!-- CENTER MAIN ANALYSIS AREA (STRUCTURED & SUMMARIZED) -->
                         <div class="ws-rail-center flex-column gap-20">
                             
-                            <!-- DEFINITION-STYLE CLAIM SUMMARY GRID -->
-                            <div class="card-enterprise">
-                                <h4 class="card-title mb-16">Claim Summary & Extracted Details</h4>
+                            <!-- STRUCTURED CLAIM SUMMARY GRID -->
+                            <div class="card-enterprise glass-card">
+                                <h4 class="card-title mb-12">Information Found Across Your Documents</h4>
+                                <span class="card-subtitle mb-16">Summarized extracted facts from submitted PDFs</span>
                                 <div class="definition-grid-2col">
                                     <div class="def-item">
-                                        <span class="def-label">CLAIMANT</span>
+                                        <span class="def-label">POLICYHOLDER NAME</span>
                                         <strong id="ws-fact-name" class="def-value">Arjun Mehta</strong>
                                     </div>
                                     <div class="def-item">
@@ -356,27 +454,27 @@
                                         <strong id="ws-fact-date" class="def-value">Not specified</strong>
                                     </div>
                                     <div class="def-item">
-                                        <span class="def-label">CLAIMED AMOUNT</span>
+                                        <span class="def-label">CLAIMED ESTIMATE</span>
                                         <strong id="ws-fact-amount" class="def-value">₹48,750</strong>
                                     </div>
                                 </div>
                             </div>
 
                             <!-- STRUCTURED ISSUES DETECTED CARDS -->
-                            <div id="ws-contradiction-card" class="card-enterprise alert-border hidden">
+                            <div id="ws-contradiction-card" class="card-enterprise alert-border glass-card hidden">
                                 <div class="alert-header">
                                     <h4 class="card-title danger-text">⚠ Information Mismatches Detected</h4>
-                                    <span id="ws-issues-count-badge" class="badge-status danger">4 Issues</span>
+                                    <span id="ws-issues-count-badge" class="badge-status danger">Issues Found</span>
                                 </div>
                                 <div id="ws-contradictions-container" class="issue-cards-stack mt-16"></div>
                             </div>
 
-                            <!-- INFORMATION FOUND ACROSS DOCUMENTS TABLE -->
-                            <div class="card-enterprise">
+                            <!-- SUMMARIZED EVIDENCE DETAILS -->
+                            <div class="card-enterprise glass-card">
                                 <div class="card-header-flex">
                                     <div>
-                                        <h4 class="card-title">Information Found Across Your Documents</h4>
-                                        <span class="card-subtitle">Select any row to view provenance & raw text snippet</span>
+                                        <h4 class="card-title">Extracted Evidence Summary</h4>
+                                        <span class="card-subtitle">Verified facts extracted across imported claim files</span>
                                     </div>
                                 </div>
                                 <div class="table-container mt-16">
@@ -386,7 +484,6 @@
                                                 <th>Field</th>
                                                 <th>Extracted Value</th>
                                                 <th>Source Document</th>
-                                                <th>Page</th>
                                                 <th>Certainty</th>
                                             </tr>
                                         </thead>
@@ -396,49 +493,48 @@
                             </div>
 
                             <!-- POLICY CLAUSE MATCHING -->
-                            <div class="card-enterprise">
-                                <h4 class="card-title">Policy Clause Evaluation</h4>
-                                <span class="card-subtitle">Matching extracted facts against motor policy clauses</span>
+                            <div class="card-enterprise glass-card">
+                                <h4 class="card-title">Policy Coverage Evaluation</h4>
+                                <span class="card-subtitle">AI grounding against your motor insurance policy terms</span>
                                 <div id="ws-policy-clauses-list" class="policy-eval-stack mt-16"></div>
                             </div>
 
                         </div>
 
-                        <!-- RIGHT RAIL: RECOMMENDED NEXT STEP & DECISION HIERARCHY -->
+                        <!-- RIGHT RAIL: AI EXPLANATION & GUIDANCE -->
                         <div class="ws-rail-right flex-column gap-20">
-                            <div id="ws-rec-card" class="card-enterprise recommendation-panel approve">
-                                <span class="rec-subhead">RECOMMENDED NEXT STEP</span>
-                                <h2 id="ws-rec-title" class="rec-title">APPROVE</h2>
+                            <div id="ws-rec-card" class="card-enterprise recommendation-panel approve glass-card">
+                                <span class="rec-subhead">SUMMARY OF EVALUATION</span>
+                                <h2 id="ws-rec-title" class="rec-title">APPROVED</h2>
                                 <p id="ws-rec-summary" class="rec-summary">All mandatory documents submitted, consistent dates & repair estimate within limit.</p>
 
                                 <div class="divider-line"></div>
 
                                 <div class="rec-section">
-                                    <span class="rec-label">Why this step is suggested</span>
+                                    <span class="rec-label">Why this result was reached</span>
                                     <div id="ws-rec-explanation" class="rec-body"></div>
                                 </div>
 
                                 <div class="rec-section mt-12">
-                                    <span class="rec-label">What you should do</span>
-                                    <div id="ws-rec-guidance" class="rec-body">Review verified details and take the recommended review action below.</div>
+                                    <span class="rec-label">Next Recommended Action</span>
+                                    <div id="ws-rec-guidance" class="rec-body">Review verified details and proceed with payout settlement.</div>
                                 </div>
 
                                 <div class="divider-line"></div>
 
                                 <!-- GUIDED ACTION BUTTONS CONTAINER -->
                                 <div class="rec-actions-box">
-                                    <span class="rec-label mb-8">Final Review Action</span>
                                     <div id="ws-guided-actions" class="guided-actions-wrapper"></div>
                                 </div>
                             </div>
 
-                            <div class="card-enterprise">
-                                <h4 class="card-title">Helpful Questions</h4>
+                            <div class="card-enterprise glass-card">
+                                <h4 class="card-title">Quick Questions</h4>
                                 <div class="prompts-chip-stack mt-12">
-                                    <button class="btn-chip" onclick="askAssistant('Why is this claim flagged?')">Why is this claim flagged?</button>
+                                    <button class="btn-chip" onclick="askAssistant('Why is this claim flagged?')">Why is my claim flagged?</button>
                                     <button class="btn-chip" onclick="askAssistant('Which policy clauses apply?')">Which policy clauses apply?</button>
-                                    <button class="btn-chip" onclick="askAssistant('Show all information mismatches')">Show information mismatches</button>
-                                    <button class="btn-chip" onclick="askAssistant('What information is missing?')">What information is missing?</button>
+                                    <button class="btn-chip" onclick="askAssistant('Show all information mismatches')">Show document mismatches</button>
+                                    <button class="btn-chip" onclick="askAssistant('What information is missing?')">What documents are missing?</button>
                                 </div>
                             </div>
                         </div>
@@ -446,11 +542,11 @@
                     </div>
 
                     <!-- COMPOSER INPUT -->
-                    <div class="workspace-composer mt-20">
+                    <div class="workspace-composer mt-20 glass-card">
                         <div class="composer-box">
                             <span class="composer-spark">✨</span>
-                            <input type="text" id="ws-assistant-input" placeholder="Ask ClaimProof about this claim or policy grounding..." autocomplete="off">
-                            <button id="ws-assistant-send-btn" class="btn-primary composer-send">
+                            <input type="text" id="ws-assistant-input" placeholder="Ask ClaimProof about your claim status or policy coverage..." autocomplete="off">
+                            <button id="ws-assistant-send-btn" class="btn-primary composer-send btn-glass-glow">
                                 <span>Send</span>
                             </button>
                         </div>
@@ -459,76 +555,33 @@
                 </div>
 
 
-                <!-- 04. CLAIMS LIST VIEW -->
-                <div id="view-claims" class="content-view hidden">
-                    <div class="card-enterprise">
-                        <div class="card-header-flex">
-                            <div>
-                                <h3 class="card-title">Claims</h3>
-                                <span class="card-subtitle">Manage and review motor insurance claim packages</span>
-                            </div>
-                            <button class="btn-primary" onclick="openNewClaimModal()">+ New Claim Review</button>
-                        </div>
-
-                        <div class="filter-bar mt-16">
-                            <div class="pill-filters" id="claims-filter-pills">
-                                <button class="filter-pill active" data-filter="all">All Claims</button>
-                                <button class="filter-pill" data-filter="APPROVE">Approved</button>
-                                <button class="filter-pill" data-filter="REQUEST_INFORMATION">Needs Information</button>
-                                <button class="filter-pill" data-filter="ESCALATE">Escalated</button>
-                                <button class="filter-pill" data-filter="REJECT">Rejected</button>
-                            </div>
-                            <input type="text" id="claims-search-input" class="input-field search-input" placeholder="Filter by Claim ID or Name...">
-                        </div>
-
-                        <div class="table-container mt-16">
-                            <table class="saas-table-ent">
-                                <thead>
-                                    <tr>
-                                        <th>Claim ID</th>
-                                        <th>Customer Name</th>
-                                        <th>Vehicle Registration</th>
-                                        <th>Incident Type</th>
-                                        <th>Date</th>
-                                        <th>Claimed Amount</th>
-                                        <th>Suggested Next Step</th>
-                                        <th>Action</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="claims-table-body"></tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-
-
-                <!-- 05. DOCUMENTS VIEW -->
+                <!-- 04. MY DOCUMENTS VIEW (IMPORTED DOCUMENTS ONLY) -->
                 <div id="view-documents" class="content-view hidden">
-                    <div class="card-enterprise">
+                    <div class="card-enterprise glass-card">
                         <div class="card-header-flex">
                             <div>
-                                <h3 class="card-title">Document Repository</h3>
-                                <span class="card-subtitle">Extracted PDF and TXT files organized by document category</span>
+                                <h3 class="card-title">□ My Documents</h3>
+                                <span class="card-subtitle">All imported PDF & TXT claim files uploaded to your account</span>
                             </div>
-                            <button class="btn-secondary" onclick="openNewClaimModal()">+ Upload Documents</button>
+                            <button class="btn-secondary" onclick="openNewClaimModal()">+ Upload New File</button>
                         </div>
 
-                        <div class="upload-zone mt-16" onclick="openNewClaimModal()">
+                        <div class="upload-zone mt-16 glass-card" onclick="openNewClaimModal()">
                             <div class="zone-icon">📁</div>
                             <h4>Drag and drop claim PDF or TXT files here</h4>
-                            <p>Supports Claim Forms, Repair Estimates, Police FIRs, Driving Licences, and Registration Certificates.</p>
+                            <p>Supports Claim Forms, Repair Estimates, Police FIRs, Driving Licences, and Vehicle Registration Certificates.</p>
                         </div>
 
                         <div class="table-container mt-16">
                             <table class="saas-table-ent">
                                 <thead>
                                     <tr>
-                                        <th>Document File</th>
-                                        <th>Category Type</th>
+                                        <th>Imported File Name</th>
+                                        <th>Document Type</th>
                                         <th>Associated Claim</th>
-                                        <th>Pages</th>
-                                        <th>Status</th>
-                                        <th>Actions</th>
+                                        <th>File Size / Pages</th>
+                                        <th>Import Status</th>
+                                        <th>Action</th>
                                     </tr>
                                 </thead>
                                 <tbody id="documents-table-body"></tbody>
@@ -538,22 +591,87 @@
                 </div>
 
 
-                <!-- 06. POLICY LIBRARY VIEW -->
-                <div id="view-policies" class="content-view hidden">
-                    <div class="card-enterprise">
+                <!-- 05. MISSING DOCUMENTS VIEW -->
+                <div id="view-missing-documents" class="content-view hidden">
+                    <div class="card-enterprise glass-card alert-border">
                         <div class="card-header-flex">
                             <div>
-                                <h3 class="card-title">Motor Insurance Policy Library</h3>
-                                <span class="card-subtitle">Search and review indexed policy requirements, coverage scope, and exclusions.</span>
+                                <h3 class="card-title danger-text">! Missing Documents</h3>
+                                <span class="card-subtitle">Required files missing from your active claim submissions</span>
                             </div>
-                            <span class="badge-neutral">10 clauses indexed</span>
+                            <button class="btn-primary btn-glass-glow" onclick="openNewClaimModal()">Upload Missing File →</button>
                         </div>
 
-                        <div class="policy-controls mt-16">
-                            <input type="text" id="policy-library-search" class="input-field search-input" placeholder="Search clauses, exclusions, IDV, theft...">
+                        <div id="missing-documents-container" class="missing-docs-grid mt-20">
+                            <div class="missing-doc-card glass-card">
+                                <div class="missing-card-icon">📄</div>
+                                <div class="missing-card-content">
+                                    <strong>Driving Licence (DL.pdf)</strong>
+                                    <p>Mandatory for driver identity & licence validity verification under Section 3 of Motor Vehicles Act.</p>
+                                    <span class="badge-status danger mt-8">Required File</span>
+                                </div>
+                                <button class="btn-primary mt-12" onclick="openNewClaimModal()">Upload Driving Licence →</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+
+                <!-- 06. MY COVERAGE (POLICY LIBRARY VIEW) -->
+                <div id="view-policies" class="content-view hidden">
+                    <div class="card-enterprise glass-card">
+                        <div class="card-header-flex">
+                            <div>
+                                <h3 class="card-title">⌕ My Coverage</h3>
+                                <span class="card-subtitle">Attractive visual overview of your motor insurance policy coverage and limits</span>
+                            </div>
+                            <span class="badge-neutral">Policy No: POL-2026-88492</span>
+                        </div>
+
+                        <!-- ATTRACTIVE VISUAL COVERAGE CARDS -->
+                        <div class="coverage-visual-grid mt-20">
+                            <div class="coverage-card glass-card">
+                                <div class="cov-card-top">
+                                    <span>OWN DAMAGE COVERAGE</span>
+                                    <span class="cov-percent">100% Covered</span>
+                                </div>
+                                <h3 class="cov-amount">₹5,00,000 IDV</h3>
+                                <div class="progress-bar-container mt-8">
+                                    <div class="progress-bar-fill" style="width: 100%;"></div>
+                                </div>
+                                <p class="cov-desc mt-8">Comprehensive accidental damage cover for your vehicle.</p>
+                            </div>
+
+                            <div class="coverage-card glass-card">
+                                <div class="cov-card-top">
+                                    <span>THIRD PARTY LIABILITY</span>
+                                    <span class="cov-percent">Unlimited</span>
+                                </div>
+                                <h3 class="cov-amount">Statutory Limit</h3>
+                                <div class="progress-bar-container mt-8">
+                                    <div class="progress-bar-fill" style="width: 100%;"></div>
+                                </div>
+                                <p class="cov-desc mt-8">Legal liability coverage for third-party injury & property damage.</p>
+                            </div>
+
+                            <div class="coverage-card glass-card">
+                                <div class="cov-card-top">
+                                    <span>PERSONAL ACCIDENT</span>
+                                    <span class="cov-percent">₹15,00,000</span>
+                                </div>
+                                <h3 class="cov-amount">Driver Cover</h3>
+                                <div class="progress-bar-container mt-8">
+                                    <div class="progress-bar-fill" style="width: 100%;"></div>
+                                </div>
+                                <p class="cov-desc mt-8">Compulsory Personal Accident cover for owner-driver.</p>
+                            </div>
+                        </div>
+
+                        <div class="policy-controls mt-24">
+                            <input type="text" id="policy-library-search" class="input-field search-input" placeholder="Search coverage clauses, exclusions, IDV limits...">
                             
                             <div class="pill-filters mt-12" id="policy-filter-chips">
-                                <button class="filter-pill active" data-policy-filter="all">All</button>
+                                <button class="filter-pill active" data-policy-filter="all">All Clauses</button>
                                 <button class="filter-pill" data-policy-filter="required">Required Documents</button>
                                 <button class="filter-pill" data-policy-filter="coverage">Coverage</button>
                                 <button class="filter-pill" data-policy-filter="exclusions">Exclusions</button>
@@ -566,34 +684,118 @@
                 </div>
 
 
-                <!-- 07. WORKSPACE SETTINGS VIEW -->
+                <!-- 07. POLICY DETAILS VIEW -->
+                <div id="view-policy-details" class="content-view hidden">
+                    <div class="card-enterprise glass-card">
+                        <h3 class="card-title">📖 Policy Details</h3>
+                        <span class="card-subtitle">Comprehensive motor policy schedule, terms, and endorsement rules</span>
+
+                        <div class="definition-grid-2col mt-20">
+                            <div class="def-item"><span class="def-label">POLICY NUMBER</span><strong class="def-value">POL-2026-88492</strong></div>
+                            <div class="def-item"><span class="def-label">INSURED NAME</span><strong class="def-value">Jaswanth G.</strong></div>
+                            <div class="def-item"><span class="def-label">VEHICLE DETAILS</span><strong class="def-value">Hyundai Creta 2024 (TN00DM2026)</strong></div>
+                            <div class="def-item"><span class="def-label">POLICY PERIOD</span><strong class="def-value">01 Jan 2026 - 31 Dec 2026</strong></div>
+                            <div class="def-item"><span class="def-label">NO CLAIM BONUS</span><strong class="def-value">25% NCB Active</strong></div>
+                            <div class="def-item"><span class="def-label">DEDUCTIBLE</span><strong class="def-value">₹1,000 Standard Compulsory</strong></div>
+                        </div>
+                    </div>
+                </div>
+
+
+                <!-- 08. CLAIM STATUS TRACKING VIEW -->
+                <div id="view-claim-status" class="content-view hidden">
+                    <div class="card-enterprise glass-card">
+                        <h3 class="card-title">◷ Claim Status Tracker</h3>
+                        <span class="card-subtitle">Real-time tracking of your claim evaluation progress</span>
+
+                        <div class="tracking-timeline mt-24">
+                            <div class="timeline-step complete">
+                                <div class="step-icon">✓</div>
+                                <div class="step-info">
+                                    <strong>1. Claim Submitted</strong>
+                                    <span>Documents received and logged into system</span>
+                                </div>
+                            </div>
+                            <div class="timeline-step complete">
+                                <div class="step-icon">✓</div>
+                                <div class="step-info">
+                                    <strong>2. AI Document Extraction</strong>
+                                    <span>Extracted facts from Claim Form, FIR, and Invoices</span>
+                                </div>
+                            </div>
+                            <div class="timeline-step active">
+                                <div class="step-icon">●</div>
+                                <div class="step-info">
+                                    <strong>3. Policy Coverage Verification</strong>
+                                    <span>Grounding facts against policy terms & exclusions</span>
+                                </div>
+                            </div>
+                            <div class="timeline-step pending">
+                                <div class="step-icon">○</div>
+                                <div class="step-info">
+                                    <strong>4. Settlement Payout</strong>
+                                    <span>Claim approval & direct bank transfer</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+
+                <!-- 09. CLAIM REPORT VIEW -->
+                <div id="view-claim-report" class="content-view hidden">
+                    <div class="card-enterprise glass-card">
+                        <div class="card-header-flex">
+                            <div>
+                                <h3 class="card-title">▤ Claim Verification Report</h3>
+                                <span class="card-subtitle">Official AI audit trail report for claim CLM-CUSTOM-001</span>
+                            </div>
+                            <button class="btn-primary btn-glass-glow" onclick="showToast('Report Download', 'Official report downloaded as PDF.', 'success')">Download PDF Report</button>
+                        </div>
+                        <div class="doc-text-content mt-20" style="font-family: Arial; font-size:14px; line-height:1.6;">
+                            <strong>CLAIMPROOF AI AUDIT REPORT</strong><br>
+                            ==============================<br>
+                            Claim ID: CLM-CUSTOM-001<br>
+                            Policyholder: Jaswanth G.<br>
+                            Vehicle: TN00DM2026<br>
+                            Verification Date: 2026-09-05<br><br>
+                            <strong>STATUS: AI DECISION VERIFIED</strong><br>
+                            - Document Completeness: 80% (4/5 documents submitted)<br>
+                            - Contradiction Assessment: Flagged date mismatch in Case 3<br>
+                            - Policy Alignment: Exclusions verified against Clause 4.2<br>
+                        </div>
+                    </div>
+                </div>
+
+
+                <!-- 10. WORKSPACE SETTINGS VIEW -->
                 <div id="view-settings" class="content-view hidden">
-                    <div class="card-enterprise max-w-800">
-                        <h3 class="card-title">Workspace Settings</h3>
-                        <span class="card-subtitle">Manage workspace profile and claims-review preferences.</span>
+                    <div class="card-enterprise max-w-800 glass-card">
+                        <h3 class="card-title">⚙ Account Settings</h3>
+                        <span class="card-subtitle">Manage your policyholder profile and notification preferences.</span>
 
                         <div class="settings-tabs mt-16">
-                            <button class="tab-item active">General Profile</button>
-                            <button class="tab-item">Policy Rules Engine</button>
-                            <button class="tab-item">Security & Compliance</button>
+                            <button class="tab-item active">User Profile</button>
+                            <button class="tab-item">Notifications</button>
+                            <button class="tab-item">Security</button>
                         </div>
 
                         <div class="settings-form-body mt-20">
-                            <h4 class="section-heading">Investigator Profile</h4>
+                            <h4 class="section-heading">Policyholder Profile</h4>
                             
                             <div class="field-group mt-16">
-                                <label class="field-label">Investigator Name</label>
+                                <label class="field-label">Full Name</label>
                                 <input type="text" id="settings-name-input" class="input-field" value="Jaswanth G.">
                             </div>
 
                             <div class="field-group mt-16">
-                                <label class="field-label">Assigned Department</label>
-                                <input type="text" id="settings-dept-input" class="input-field" value="Motor Claims Review Team - South Region">
+                                <label class="field-label">Policy Number</label>
+                                <input type="text" id="settings-dept-input" class="input-field" value="POL-2026-88492">
                             </div>
 
                             <div class="form-actions-right mt-24">
                                 <button class="btn-secondary" onclick="navigateTo('dashboard')">Cancel</button>
-                                <button class="btn-primary" onclick="saveSettingsProfile()">Save Changes</button>
+                                <button class="btn-primary btn-glass-glow" onclick="saveSettingsProfile()">Save Changes</button>
                             </div>
                         </div>
                     </div>
@@ -606,24 +808,24 @@
 
     <!-- OVERLAYS & MODALS -->
     <div id="modal-new-claim" class="modal-overlay hidden">
-        <div class="modal-card-ent">
+        <div class="modal-card-ent glass-card">
             <div class="modal-header">
-                <h3>New Claim Review Package</h3>
+                <h3>＋ Start New Claim Submission</h3>
                 <button class="modal-close-btn" onclick="closeNewClaimModal()">✕</button>
             </div>
 
             <div class="modal-body">
                 <div class="demo-try-section">
-                    <span class="demo-try-label">⚡ QUICK TEST: SELECT A DEMO CLAIM</span>
+                    <span class="demo-try-label">⚡ QUICK TEST DEMO CLAIM SCENARIOS</span>
                     <div class="demo-try-buttons">
-                        <button class="btn-demo-pill approve" onclick="runDemoClaimFromModal('claim_001_approve')">Case 1: Approve Claim</button>
+                        <button class="btn-demo-pill approve" onclick="runDemoClaimFromModal('claim_001_approve')">Case 1: Standard Approve</button>
                         <button class="btn-demo-pill request" onclick="runDemoClaimFromModal('claim_002_request_information')">Case 2: Missing DL</button>
                         <button class="btn-demo-pill escalate" onclick="runDemoClaimFromModal('claim_003_escalate')">Case 3: Date Mismatch</button>
                         <button class="btn-demo-pill reject" onclick="runDemoClaimFromModal('claim_004_reject')">Case 4: Commercial Use</button>
                     </div>
                 </div>
 
-                <div class="modal-divider"><span>OR UPLOAD CUSTOM CLAIM</span></div>
+                <div class="modal-divider"><span>OR UPLOAD YOUR CLAIM FILES</span></div>
 
                 <form id="new-claim-form" onsubmit="handleCustomClaimSubmit(event)">
                     <div class="field-group">
@@ -638,7 +840,7 @@
 
                     <div class="modal-actions mt-20">
                         <button type="button" class="btn-secondary" onclick="closeNewClaimModal()">Cancel</button>
-                        <button type="submit" class="btn-primary">Analyze Claim Package →</button>
+                        <button type="submit" class="btn-primary btn-glass-glow">Verify Claim Package →</button>
                     </div>
                 </form>
             </div>
@@ -646,30 +848,30 @@
     </div>
 
     <div id="modal-processing" class="modal-overlay hidden">
-        <div class="modal-card-ent processing-card">
+        <div class="modal-card-ent processing-card glass-card">
             <div class="spinner-large"></div>
-            <h3>Analyzing Claim Evidence...</h3>
-            <p class="processing-subtitle">Running document extraction & policy clause matching</p>
+            <h3>AI Checking Your Claim...</h3>
+            <p class="processing-subtitle">Verifying document completeness & policy coverage</p>
             <div class="processing-steps-list">
-                <div class="p-step complete" id="pstep-1">✓ Reading claim documents</div>
-                <div class="p-step complete" id="pstep-2">✓ Extracting structured details</div>
-                <div class="p-step active" id="pstep-3">● Checking document availability</div>
+                <div class="p-step complete" id="pstep-1">✓ Reading submitted files</div>
+                <div class="p-step complete" id="pstep-2">✓ Extracting key facts</div>
+                <div class="p-step active" id="pstep-3">● Checking document completeness</div>
                 <div class="p-step pending" id="pstep-4">○ Checking for information mismatches</div>
-                <div class="p-step pending" id="pstep-5">○ Grounding policy clauses & decision logic</div>
+                <div class="p-step pending" id="pstep-5">○ Grounding policy coverage & AI decision</div>
             </div>
         </div>
     </div>
 
     <div id="drawer-document" class="drawer-overlay hidden">
-        <div class="drawer-card-ent">
+        <div class="drawer-card-ent glass-card">
             <div class="drawer-header">
                 <h3 id="drawer-doc-filename">document_name.pdf</h3>
                 <button class="modal-close-btn" onclick="closeDrawer('drawer-document')">✕</button>
             </div>
             <div class="drawer-body">
                 <div class="doc-preview-meta">
-                    <span id="drawer-doc-type" class="badge-neutral">CLAIM FORM</span>
-                    <span id="drawer-doc-pages">Page 1 of 1</span>
+                    <span id="drawer-doc-type" class="badge-neutral">CLAIM FILE</span>
+                    <span id="drawer-doc-pages">Imported Document</span>
                 </div>
                 <div class="doc-text-content mt-12" id="drawer-doc-content"></div>
             </div>
@@ -677,7 +879,7 @@
     </div>
 
     <div id="drawer-evidence" class="drawer-overlay hidden">
-        <div class="drawer-card-ent">
+        <div class="drawer-card-ent glass-card">
             <div class="drawer-header">
                 <h3>Extracted Evidence Provenance</h3>
                 <button class="modal-close-btn" onclick="closeDrawer('drawer-evidence')">✕</button>
@@ -687,7 +889,7 @@
     </div>
 
     <div id="drawer-policy" class="drawer-overlay hidden">
-        <div class="drawer-card-ent">
+        <div class="drawer-card-ent glass-card">
             <div class="drawer-header">
                 <h3 id="drawer-policy-id">Clause 2.1</h3>
                 <button class="modal-close-btn" onclick="closeDrawer('drawer-policy')">✕</button>
@@ -697,10 +899,10 @@
     </div>
 
     <div id="modal-command-palette" class="modal-overlay hidden">
-        <div class="command-palette-card-ent">
+        <div class="command-palette-card-ent glass-card">
             <div class="command-search-header">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-                <input type="text" id="cmd-input" placeholder="Type a command or search claims..." autocomplete="off">
+                <input type="text" id="cmd-input" placeholder="Search claims, policy, or documents..." autocomplete="off">
                 <kbd class="kbd-pill">ESC to close</kbd>
             </div>
             <div class="command-results-list" id="cmd-results"></div>
