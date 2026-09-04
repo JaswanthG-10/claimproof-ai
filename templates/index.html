@@ -8,34 +8,83 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Three.js for 3D Node Animation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
 
     <!-- ========================================== -->
-    <!-- ENTERPRISE WELCOME / LOGIN SCREEN          -->
+    <!-- PART 3 — SPLIT-SCREEN 3D MOTION LOGIN PAGE -->
     <!-- ========================================== -->
-    <div id="welcome-screen" class="welcome-container">
-        <div class="welcome-card-enterprise" id="welcome-card-3d">
-            <div class="welcome-logo-box">
-                <svg width="40" height="40" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <rect x="4" y="4" width="24" height="24" rx="6" fill="#2563EB" fill-opacity="0.15" stroke="#2563EB" stroke-width="2"/>
-                    <path d="M10 16L14 20L22 12" stroke="#38BDF8" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
+    <div id="welcome-screen" class="welcome-split-container">
+        
+        <!-- LEFT PANEL (~58%): 3D MOTION GRAPHICS -->
+        <div class="login-3d-panel">
+            <canvas id="canvas-3d"></canvas>
+            <div class="panel-3d-overlay">
+                <div class="badge-tag info-pill mb-16">
+                    <span class="dot-live"></span>
+                    <span>AI EVIDENCE GRAPH ENGINE</span>
+                </div>
+                <h1 class="panel-3d-title">Intelligent Evidence Analysis</h1>
+                <p class="panel-3d-subtitle">Automated verification connecting documents → evidence → policy → recommendations in seconds.</p>
+                <div class="node-labels-preview mt-24">
+                    <span class="node-chip active"><span class="chip-dot"></span> Documents</span>
+                    <span class="node-arrow">→</span>
+                    <span class="node-chip active"><span class="chip-dot"></span> Evidence</span>
+                    <span class="node-arrow">→</span>
+                    <span class="node-chip active"><span class="chip-dot"></span> Policy Grounding</span>
+                    <span class="node-arrow">→</span>
+                    <span class="node-chip active"><span class="chip-dot"></span> Recommendation</span>
+                </div>
             </div>
-
-            <h1 class="welcome-title">ClaimProof AI</h1>
-            <p class="welcome-desc">Evidence-grounded motor insurance claims review workspace. Verify documents, detect mismatches, and match policy clauses with confidence.</p>
-
-            <button id="enter-workspace-btn" class="btn-primary-enterprise">
-                <span>Enter Workspace →</span>
-            </button>
         </div>
+
+        <!-- RIGHT PANEL (~42%): LOGIN FORM PANEL -->
+        <div class="login-form-panel">
+            <div class="form-card-box">
+                <div class="login-logo-row">
+                    <div class="logo-mark">
+                        <svg width="28" height="28" viewBox="0 0 32 32" fill="none">
+                            <rect x="4" y="4" width="24" height="24" rx="6" fill="#2563EB" fill-opacity="0.2" stroke="#2563EB" stroke-width="2"/>
+                            <path d="M10 16L14 20L22 12" stroke="#38BDF8" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </div>
+                    <span class="brand-name">ClaimProof AI</span>
+                </div>
+
+                <h2 class="form-title mt-24">Sign in to your workspace</h2>
+                <p class="form-subtitle">Enter your credentials to access the claims review workspace.</p>
+
+                <form id="login-form" onsubmit="handleLoginSubmit(event)" class="mt-24">
+                    <div class="field-group">
+                        <label class="field-label">Work Email</label>
+                        <input type="email" id="login-email" class="input-field" value="jaswant@claimproof.ai" placeholder="name@company.com" required>
+                        <span id="email-error-msg" class="field-error-text hidden">✕ Please enter a valid work email.</span>
+                    </div>
+
+                    <div class="field-group mt-16">
+                        <div class="field-label-row">
+                            <label class="field-label">Password</label>
+                            <a href="#" class="btn-tertiary-link" onclick="showToast('Password Reset', 'Password reset instructions sent to your email.', 'info'); return false;">Forgot password?</a>
+                        </div>
+                        <input type="password" id="login-password" class="input-field" value="••••••••••••" placeholder="Enter your password" required>
+                    </div>
+
+                    <button type="submit" id="login-submit-btn" class="btn-primary full-width mt-24">
+                        <span id="login-btn-text">Sign In →</span>
+                        <span id="login-btn-spinner" class="inline-spinner hidden"></span>
+                    </button>
+                </form>
+            </div>
+        </div>
+
     </div>
 
 
     <!-- ========================================== -->
-    <!-- GLOBAL ENTERPRISE APPLICATION SHELL        -->
+    <!-- GLOBAL APPLICATION SHELL                    -->
     <!-- ========================================== -->
     <div id="app-shell" class="app-shell hidden">
 
@@ -141,7 +190,7 @@
                             <p class="hero-body">You have 4 claims ready for evaluation and 5 cases requiring review action.</p>
                         </div>
                         <div class="hero-action-area">
-                            <button class="btn-primary-enterprise" onclick="openNewClaimModal()">
+                            <button class="btn-primary" onclick="openNewClaimModal()">
                                 <span>+ New Claim Review</span>
                             </button>
                         </div>
@@ -182,7 +231,7 @@
                                     <h3 class="card-title">Recent Claim Reviews</h3>
                                     <span class="card-subtitle">Latest evidence evaluations and review actions</span>
                                 </div>
-                                <button class="btn-link" onclick="navigateTo('claims')">View All →</button>
+                                <button class="btn-tertiary-link" onclick="navigateTo('claims')">View All →</button>
                             </div>
 
                             <div class="table-container mt-16">
@@ -212,7 +261,7 @@
                                         <strong>Case 1: Standard Accident Claim</strong>
                                         <span>Complete docs, valid dates, repair estimate within limit</span>
                                     </div>
-                                    <span class="status-badge approve">APPROVE</span>
+                                    <span class="status-badge approve">✓ APPROVE</span>
                                 </div>
 
                                 <div class="demo-item-row request" onclick="runDemoClaim('claim_002_request_information')">
@@ -220,7 +269,7 @@
                                         <strong>Case 2: Missing Driving Licence</strong>
                                         <span>Missing mandatory Driving Licence document</span>
                                     </div>
-                                    <span class="status-badge request">REQ INFO</span>
+                                    <span class="status-badge request">⚠ REQ INFO</span>
                                 </div>
 
                                 <div class="demo-item-row escalate" onclick="runDemoClaim('claim_003_escalate')">
@@ -228,7 +277,7 @@
                                         <strong>Case 3: Date Contradiction</strong>
                                         <span>Claim Form date (Aug 21) vs Police FIR date (Aug 22)</span>
                                     </div>
-                                    <span class="status-badge escalate">ESCALATE</span>
+                                    <span class="status-badge escalate">▲ ESCALATE</span>
                                 </div>
 
                                 <div class="demo-item-row reject" onclick="runDemoClaim('claim_004_reject')">
@@ -236,7 +285,7 @@
                                         <strong>Case 4: Prohibited Commercial Use</strong>
                                         <span>Vehicle operated as commercial ride-share taxi</span>
                                     </div>
-                                    <span class="status-badge reject">REJECT</span>
+                                    <span class="status-badge reject">✕ REJECT</span>
                                 </div>
                             </div>
                         </div>
@@ -251,14 +300,14 @@
                     <!-- UN-CONCATENATED SEPARATE HEADER -->
                     <div class="workspace-header">
                         <div class="ws-header-left">
-                            <button class="btn-back" onclick="navigateTo('claims')">← Claims</button>
+                            <button class="btn-secondary" onclick="navigateTo('claims')">← Claims</button>
                             <h2 id="ws-claim-id" class="ws-title">CLM-CUSTOM-001</h2>
                             <span id="ws-incident-badge" class="badge-neutral">Accident</span>
-                            <span id="ws-status-badge" class="badge-status warning">Needs information</span>
+                            <span id="ws-status-badge" class="badge-status warning">⚠ Needs information</span>
                         </div>
                         <div class="ws-header-right">
-                            <button class="btn-secondary-ent" onclick="showToast('Download Report', 'Report downloaded successfully.', 'info')">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                            <button class="btn-secondary" onclick="showToast('Download Report', 'Report downloaded successfully.', 'info')">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
                                 <span>Download Report</span>
                             </button>
                         </div>
@@ -284,7 +333,7 @@
                                 <div id="ws-doc-available-list" class="doc-status-stack mt-8"></div>
                             </div>
 
-                            <button class="btn-link mt-16" onclick="navigateTo('policies')">Open Policy Library →</button>
+                            <button class="btn-tertiary-link mt-16" onclick="navigateTo('policies')">Open Policy Library →</button>
                         </div>
 
                         <!-- CENTER MAIN ANALYSIS AREA -->
@@ -316,7 +365,7 @@
                             <!-- STRUCTURED ISSUES DETECTED CARDS -->
                             <div id="ws-contradiction-card" class="card-enterprise alert-border hidden">
                                 <div class="alert-header">
-                                    <h4 class="card-title warning-text">⚠️ Information Mismatches Detected</h4>
+                                    <h4 class="card-title danger-text">⚠ Information Mismatches Detected</h4>
                                     <span id="ws-issues-count-badge" class="badge-status danger">4 Issues</span>
                                 </div>
                                 <div id="ws-contradictions-container" class="issue-cards-stack mt-16"></div>
@@ -401,7 +450,7 @@
                         <div class="composer-box">
                             <span class="composer-spark">✨</span>
                             <input type="text" id="ws-assistant-input" placeholder="Ask ClaimProof about this claim or policy grounding..." autocomplete="off">
-                            <button id="ws-assistant-send-btn" class="btn-primary-enterprise composer-send">
+                            <button id="ws-assistant-send-btn" class="btn-primary composer-send">
                                 <span>Send</span>
                             </button>
                         </div>
@@ -418,7 +467,7 @@
                                 <h3 class="card-title">Claims</h3>
                                 <span class="card-subtitle">Manage and review motor insurance claim packages</span>
                             </div>
-                            <button class="btn-primary-enterprise" onclick="openNewClaimModal()">+ New Claim Review</button>
+                            <button class="btn-primary" onclick="openNewClaimModal()">+ New Claim Review</button>
                         </div>
 
                         <div class="filter-bar mt-16">
@@ -429,7 +478,7 @@
                                 <button class="filter-pill" data-filter="ESCALATE">Escalated</button>
                                 <button class="filter-pill" data-filter="REJECT">Rejected</button>
                             </div>
-                            <input type="text" id="claims-search-input" class="input-ent search-input" placeholder="Filter by Claim ID or Name...">
+                            <input type="text" id="claims-search-input" class="input-field search-input" placeholder="Filter by Claim ID or Name...">
                         </div>
 
                         <div class="table-container mt-16">
@@ -461,7 +510,7 @@
                                 <h3 class="card-title">Document Repository</h3>
                                 <span class="card-subtitle">Extracted PDF and TXT files organized by document category</span>
                             </div>
-                            <button class="btn-secondary-ent" onclick="openNewClaimModal()">+ Upload Documents</button>
+                            <button class="btn-secondary" onclick="openNewClaimModal()">+ Upload Documents</button>
                         </div>
 
                         <div class="upload-zone mt-16" onclick="openNewClaimModal()">
@@ -489,7 +538,7 @@
                 </div>
 
 
-                <!-- 06. POLICY LIBRARY VIEW (STRUCTURED CLAUSES WITH FILTERS) -->
+                <!-- 06. POLICY LIBRARY VIEW -->
                 <div id="view-policies" class="content-view hidden">
                     <div class="card-enterprise">
                         <div class="card-header-flex">
@@ -501,7 +550,7 @@
                         </div>
 
                         <div class="policy-controls mt-16">
-                            <input type="text" id="policy-library-search" class="input-ent search-input" placeholder="Search clauses, exclusions, IDV, theft...">
+                            <input type="text" id="policy-library-search" class="input-field search-input" placeholder="Search clauses, exclusions, IDV, theft...">
                             
                             <div class="pill-filters mt-12" id="policy-filter-chips">
                                 <button class="filter-pill active" data-policy-filter="all">All</button>
@@ -517,7 +566,7 @@
                 </div>
 
 
-                <!-- 07. WORKSPACE SETTINGS VIEW (TABBED & CONSTRAINED WIDTH) -->
+                <!-- 07. WORKSPACE SETTINGS VIEW -->
                 <div id="view-settings" class="content-view hidden">
                     <div class="card-enterprise max-w-800">
                         <h3 class="card-title">Workspace Settings</h3>
@@ -532,19 +581,19 @@
                         <div class="settings-form-body mt-20">
                             <h4 class="section-heading">Investigator Profile</h4>
                             
-                            <div class="form-group mt-16">
-                                <label class="form-label">Investigator Name</label>
-                                <input type="text" id="settings-name-input" class="input-ent" value="Jaswanth G.">
+                            <div class="field-group mt-16">
+                                <label class="field-label">Investigator Name</label>
+                                <input type="text" id="settings-name-input" class="input-field" value="Jaswanth G.">
                             </div>
 
-                            <div class="form-group mt-16">
-                                <label class="form-label">Assigned Department</label>
-                                <input type="text" id="settings-dept-input" class="input-ent" value="Motor Claims Review Team - South Region">
+                            <div class="field-group mt-16">
+                                <label class="field-label">Assigned Department</label>
+                                <input type="text" id="settings-dept-input" class="input-field" value="Motor Claims Review Team - South Region">
                             </div>
 
                             <div class="form-actions-right mt-24">
-                                <button class="btn-secondary-ent" onclick="navigateTo('dashboard')">Cancel</button>
-                                <button class="btn-primary-enterprise" onclick="saveSettingsProfile()">Save Changes</button>
+                                <button class="btn-secondary" onclick="navigateTo('dashboard')">Cancel</button>
+                                <button class="btn-primary" onclick="saveSettingsProfile()">Save Changes</button>
                             </div>
                         </div>
                     </div>
@@ -577,19 +626,19 @@
                 <div class="modal-divider"><span>OR UPLOAD CUSTOM CLAIM</span></div>
 
                 <form id="new-claim-form" onsubmit="handleCustomClaimSubmit(event)">
-                    <div class="form-group">
-                        <label class="form-label">Claim ID</label>
-                        <input type="text" id="modal-claim-id" class="input-ent" value="CLM-CUSTOM-001" required>
+                    <div class="field-group">
+                        <label class="field-label">Claim ID</label>
+                        <input type="text" id="modal-claim-id" class="input-field" value="CLM-CUSTOM-001" required>
                     </div>
 
-                    <div class="form-group">
-                        <label class="form-label">Claim Documents (PDF or TXT)</label>
+                    <div class="field-group mt-12">
+                        <label class="field-label">Claim Documents (PDF or TXT)</label>
                         <input type="file" id="modal-files" class="input-file" multiple required>
                     </div>
 
                     <div class="modal-actions mt-20">
-                        <button type="button" class="btn-secondary-ent" onclick="closeNewClaimModal()">Cancel</button>
-                        <button type="submit" class="btn-primary-enterprise">Analyze Claim Package →</button>
+                        <button type="button" class="btn-secondary" onclick="closeNewClaimModal()">Cancel</button>
+                        <button type="submit" class="btn-primary">Analyze Claim Package →</button>
                     </div>
                 </form>
             </div>

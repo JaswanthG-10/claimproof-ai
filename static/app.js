@@ -18,6 +18,7 @@ const state = {
 document.addEventListener('DOMContentLoaded', () => {
     initApp();
     setupEventListeners();
+    init3DScene();
     checkHealth();
 });
 
@@ -28,14 +29,20 @@ function initApp() {
 async function checkHealth() {
     try {
         const res = await fetch('/health');
-        const data = await res.json();
+        await res.json();
     } catch (e) {
         console.warn('Health check fallback:', e);
     }
 }
 
 function setupEventListeners() {
-    // Welcome Enter Button
+    // Login Form Submit
+    const loginForm = document.getElementById('login-form');
+    if (loginForm) {
+        loginForm.addEventListener('submit', handleLoginSubmit);
+    }
+
+    // Welcome Enter Button fallback
     document.getElementById('enter-workspace-btn')?.addEventListener('click', enterWorkspace);
 
     // Sidebar Nav Items
@@ -86,6 +93,202 @@ function setupEventListeners() {
     document.getElementById('ws-assistant-input')?.addEventListener('keydown', (e) => {
         if (e.key === 'Enter') handleAssistantSubmit();
     });
+}
+
+
+/* ========================================== */
+/* THREE.JS 3D GRAPH VISUALIZATION            */
+/* ========================================== */
+
+let scene, camera, renderer, nodesGroup;
+let mouseX = 0, mouseY = 0;
+let targetX = 0, targetY = 0;
+
+function init3DScene() {
+    const canvas = document.getElementById('canvas-3d');
+    if (!canvas || typeof THREE === 'undefined') return;
+
+    // Check prefers-reduced-motion
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    const container = canvas.parentElement;
+    const width = container.clientWidth || 600;
+    const height = container.clientHeight || 700;
+
+    scene = new THREE.Scene();
+    scene.fog = new THREE.FogExp2(0x080E19, 0.035);
+
+    camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000);
+    camera.position.z = 24;
+
+    renderer = new THREE.WebGLRenderer({ canvas: canvas, alpha: true, antialias: true });
+    renderer.setSize(width, height);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+    nodesGroup = new THREE.Group();
+    scene.add(nodesGroup);
+
+    // Node Network Definition: Documents -> Evidence -> Policy -> Recommendation
+    const stages = [
+        { label: 'Documents', x: -9, color: 0x38BDF8, count: 4 },
+        { label: 'Evidence', x: -3, color: 0x2563EB, count: 6 },
+        { label: 'Policy', x: 3, color: 0x818CF8, count: 5 },
+        { label: 'Recommendation', x: 9, color: 0x4ADE80, count: 3 }
+    ];
+
+    const nodePositions = [];
+    const sphereGeo = new THREE.SphereGeometry(0.35, 16, 16);
+
+    stages.forEach(stage => {
+        const stageNodes = [];
+        for (let i = 0; i < stage.count; i++) {
+            const y = (i - (stage.count - 1) / 2) * 2.6 + (Math.random() - 0.5) * 0.4;
+            const z = (Math.random() - 0.5) * 3;
+
+            const mat = new THREE.MeshBasicMaterial({
+                color: stage.color,
+                wireframe: false
+            });
+            const mesh = new THREE.Mesh(sphereGeo, mat);
+            mesh.position.set(stage.x, y, z);
+            nodesGroup.add(mesh);
+
+            // Subtle outer halo
+            const haloGeo = new THREE.SphereGeometry(0.55, 12, 12);
+            const haloMat = new THREE.MeshBasicMaterial({
+                color: stage.color,
+                transparent: true,
+                opacity: 0.2,
+                wireframe: true
+            });
+            const halo = new THREE.Mesh(haloGeo, haloMat);
+            halo.position.set(stage.x, y, z);
+            nodesGroup.add(halo);
+
+            stageNodes.push({ x: stage.x, y, z, mesh, color: stage.color });
+        }
+        nodePositions.push(stageNodes);
+    });
+
+    // Draw connection lines between adjacent stages
+    const lineMat = new THREE.LineBasicMaterial({
+        color: 0x2563EB,
+        transparent: true,
+        opacity: 0.35
+    });
+
+    for (let s = 0; s < nodePositions.length - 1; s++) {
+        const currStage = nodePositions[s];
+        const nextStage = nodePositions[s + 1];
+
+        currStage.forEach(n1 => {
+            nextStage.forEach(n2 => {
+                if (Math.random() > 0.45) return; // Connect subset of nodes for clean network look
+                const points = [];
+                points.push(new THREE.Vector3(n1.x, n1.y, n1.z));
+                // Add curve midpoint
+                const midX = (n1.x + n2.x) / 2;
+                const midY = (n1.y + n2.y) / 2 + (Math.random() - 0.5) * 1.5;
+                const midZ = (n1.z + n2.z) / 2 + (Math.random() - 0.5) * 1.5;
+                points.push(new THREE.Vector3(midX, midY, midZ));
+                points.push(new THREE.Vector3(n2.x, n2.y, n2.z));
+
+                const curve = new THREE.CatmullRomCurve3(points);
+                const curvePoints = curve.getPoints(20);
+                const geometry = new THREE.BufferGeometry().setFromPoints(curvePoints);
+                const line = new THREE.Line(geometry, lineMat);
+                nodesGroup.add(line);
+            });
+        });
+    }
+
+    // Add ambient particles background
+    const particleCount = 120;
+    const particleGeo = new THREE.BufferGeometry();
+    const posArray = new Float32Array(particleCount * 3);
+
+    for (let i = 0; i < particleCount * 3; i += 3) {
+        posArray[i] = (Math.random() - 0.5) * 28;
+        posArray[i + 1] = (Math.random() - 0.5) * 18;
+        posArray[i + 2] = (Math.random() - 0.5) * 14;
+    }
+
+    particleGeo.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+    const particleMat = new THREE.PointsMaterial({
+        size: 0.08,
+        color: 0x38BDF8,
+        transparent: true,
+        opacity: 0.6
+    });
+    const particles = new THREE.Points(particleGeo, particleMat);
+    nodesGroup.add(particles);
+
+    // Mouse parallax listener
+    container.addEventListener('mousemove', (e) => {
+        const rect = container.getBoundingClientRect();
+        mouseX = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+        mouseY = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+    });
+
+    // Resize Handler
+    window.addEventListener('resize', () => {
+        if (!container) return;
+        const w = container.clientWidth;
+        const h = container.clientHeight;
+        camera.aspect = w / h;
+        camera.updateProjectionMatrix();
+        renderer.setSize(w, h);
+    });
+
+    // Animation Loop
+    if (prefersReducedMotion) {
+        renderer.render(scene, camera);
+        return;
+    }
+
+    let clock = new THREE.Clock();
+
+    function animate() {
+        requestAnimationFrame(animate);
+
+        const elapsedTime = clock.getElapsedTime();
+
+        // Parallax smooth interpolation
+        targetX = mouseX * 0.8;
+        targetY = mouseY * 0.8;
+
+        nodesGroup.rotation.y += 0.0015;
+        nodesGroup.rotation.x = Math.sin(elapsedTime * 0.4) * 0.04 + targetY * 0.1;
+        nodesGroup.rotation.y += (targetX * 0.1 - nodesGroup.rotation.y) * 0.05;
+
+        // Pulse particles opacity
+        particleMat.opacity = 0.4 + Math.sin(elapsedTime * 1.5) * 0.2;
+
+        renderer.render(scene, camera);
+    }
+
+    animate();
+}
+
+
+/* ========================================== */
+/* LOGIN FORM HANDLER                         */
+/* ========================================== */
+
+function handleLoginSubmit(e) {
+    e.preventDefault();
+    const btn = document.getElementById('login-submit-btn');
+    if (!btn) return enterWorkspace();
+
+    const origContent = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = `<span style="display:inline-block; width:14px; height:14px; border:2px solid rgba(255,255,255,0.3); border-top-color:#fff; border-radius:50%; animation:spin 0.8s linear infinite; margin-right:8px; vertical-align:middle;"></span> Signing in...`;
+
+    setTimeout(() => {
+        enterWorkspace();
+        btn.disabled = false;
+        btn.innerHTML = origContent;
+    }, 450);
 }
 
 
@@ -151,7 +354,7 @@ async function fetchDemoCasesList() {
     try {
         const res = await fetch('/api/demo-cases');
         if (res.ok) {
-            const data = await res.json();
+            await res.json();
             runDemoClaim('claim_001_approve', false);
         }
     } catch (e) {
@@ -275,13 +478,13 @@ function renderWorkspace(claim) {
             const div = document.createElement('div');
             div.className = 'doc-status-row missing';
             div.innerHTML = `
-                <span>○ ${doc.replace('_', ' ').toLowerCase().replace(/\b\w/g, c => c.toUpperCase())}</span>
+                <span>✕ ${doc.replace('_', ' ').toLowerCase().replace(/\b\w/g, c => c.toUpperCase())}</span>
                 <span class="badge-tag req">Required</span>
             `;
             missingList.appendChild(div);
         });
     } else {
-        missingList.innerHTML = `<div class="metadata-text">No required documents missing.</div>`;
+        missingList.innerHTML = `<div class="metadata-text">✓ No required documents missing.</div>`;
     }
 
     // Always include policy in available
@@ -318,7 +521,7 @@ function renderWorkspace(claim) {
 
     if (contradictions.length > 0) {
         cCard.classList.remove('hidden');
-        document.getElementById('ws-issues-count-badge').innerText = `${contradictions.length} Issues`;
+        document.getElementById('ws-issues-count-badge').innerText = `⚠ ${contradictions.length} Issues`;
         cContainer.innerHTML = '';
 
         contradictions.forEach(c => {
@@ -327,7 +530,7 @@ function renderWorkspace(claim) {
             card.innerHTML = `
                 <div class="issue-card-top">
                     <span class="issue-title">⚠ ${c.field_name.replace('_', ' ').toUpperCase()} MISMATCH</span>
-                    <span class="badge-status danger">HIGH</span>
+                    <span class="badge-status danger">HIGH RISK</span>
                 </div>
                 <div class="issue-desc">${c.description}</div>
                 <div class="issue-comparison-table">
@@ -584,16 +787,16 @@ function renderPolicyLibrary() {
     grid.innerHTML = '';
 
     const assessments = state.activeClaim?.policy_assessments || [];
-    
+
     assessments.forEach(c => {
         const category = (c.category || 'COVERAGE').toUpperCase();
-        
+
         // Filter logic
         if (state.policyFilter !== 'all') {
             if (state.policyFilter === 'required' && !category.includes('REQUIRED') && !category.includes('DOCUMENT')) return;
             if (state.policyFilter === 'coverage' && !category.includes('COVERAGE')) return;
             if (state.policyFilter === 'exclusions' && !category.includes('EXCLUSION')) return;
-            if (state.policyFilter === 'idv' && !category.includes('IDV') && !category.includes('LIMIT')) return;
+            if (state.policyFilter === 'idv' && !category.includes('LIMIT') && !category.includes('IDV')) return;
         }
 
         const div = document.createElement('div');
@@ -797,10 +1000,8 @@ function showToast(title, message, type = 'info') {
         <span>${message}</span>
     `;
     container.appendChild(toast);
-
     setTimeout(() => {
         toast.style.opacity = '0';
-        toast.style.transition = 'opacity 0.3s ease';
         setTimeout(() => toast.remove(), 300);
-    }, 3500);
+    }, 4000);
 }
