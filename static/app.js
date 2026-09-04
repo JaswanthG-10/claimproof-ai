@@ -29,7 +29,7 @@ async function checkHealth() {
         const data = await res.json();
         const statusPill = document.getElementById('server-status-pill');
         if (data.status === 'ok') {
-            statusPill.innerHTML = `<span class="dot green"></span> Server Operational (${data.gemini_configured ? 'Gemini 3.5' : 'Rules Engine'})`;
+            statusPill.innerHTML = `<span class="dot green"></span> System Ready`;
         }
     } catch (e) {
         console.warn('Health check fallback:', e);
