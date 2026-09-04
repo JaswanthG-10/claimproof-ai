@@ -3,86 +3,48 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ClaimProof AI | Insurance Claims Evidence Review Platform</title>
-    <!-- Plus Jakarta Sans Font -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <title>ClaimProof AI | Clear Claim Reviews with Trusted Evidence</title>
     <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
 
     <!-- ========================================== -->
-    <!-- 01. WELCOME / ENTRY SCREEN                 -->
+    <!-- ELEGANT MINIMAL ROYAL LOGIN / WELCOME      -->
     <!-- ========================================== -->
     <div id="welcome-screen" class="welcome-container">
-        <div class="welcome-bg-decoration">
-            <div class="glow-orb orb-1"></div>
-            <div class="glow-orb orb-2"></div>
-            <div class="grid-overlay"></div>
-        </div>
-
-        <div class="welcome-card-wrapper">
-            <div class="welcome-card">
-                <div class="welcome-brand">
-                    <div class="brand-symbol">
-                        <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
-                            <rect width="32" height="32" rx="8" fill="#554AE8"/>
-                            <path d="M9 16L14 21L23 11" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-                        </svg>
-                    </div>
-                    <span class="welcome-brand-name">ClaimProof <span>AI</span></span>
-                </div>
-
-                <div class="welcome-content">
-                    <h1 class="welcome-headline">Evidence you can verify.</h1>
-                    <p class="welcome-subline">
-                        Automated evidence review for motor insurance claims. Cross-examine claim forms, FIRs, and repair estimates against policy clauses with 100% citation grounding.
-                    </p>
-                </div>
-
-                <div class="welcome-action">
-                    <button id="enter-workspace-btn" class="btn-primary-lg enter-btn">
-                        <span>Enter Workspace</span>
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M5 12h14M12 5l7 7-7 7"/>
-                        </svg>
-                    </button>
-                    <span class="welcome-footnote">Instant investigator access • No credentials required</span>
-                </div>
-
-                <div class="welcome-preview-mini">
-                    <div class="preview-bar">
-                        <span class="dot red"></span>
-                        <span class="dot yellow"></span>
-                        <span class="dot green"></span>
-                        <span class="preview-title">ClaimProof Investigation Dashboard</span>
-                    </div>
-                    <div class="preview-body">
-                        <div class="preview-chip match">✓ Policy Active</div>
-                        <div class="preview-chip match">✓ Required Docs Present</div>
-                        <div class="preview-chip conflict">⚠️ Date Mismatch Detected</div>
-                        <div class="preview-chip citation">📜 Clause 4.2 Exclusion</div>
-                    </div>
-                </div>
+        <div class="welcome-card">
+            <!-- Minimal Document + Verification Shield Logo -->
+            <div class="welcome-logo">
+                <svg width="56" height="56" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M6 6C6 4.89543 6.89543 4 8 4H18L26 12V26C26 27.1046 25.1046 28 24 28H8C6.89543 28 6 27.1046 6 26V6Z" stroke="#4169E1" stroke-width="2.2" fill="none"/>
+                    <path d="M18 4V12H26" stroke="#4169E1" stroke-width="2.2"/>
+                    <path d="M11 18L14.5 21.5L21 14" stroke="#D4AF37" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
             </div>
+
+            <h1 class="welcome-title">ClaimProof AI</h1>
+            <p class="welcome-desc">Clear claim reviews with trusted evidence.</p>
+
+            <button id="enter-workspace-btn" class="btn-enter">
+                <span>Enter Workspace →</span>
+            </button>
         </div>
     </div>
 
 
     <!-- ========================================== -->
-    <!-- MAIN APPLICATION SHELL                     -->
+    <!-- MAIN APPLICATION SHELL (ROYAL THEME)       -->
     <!-- ========================================== -->
     <div id="app-shell" class="app-shell hidden">
 
-        <!-- SIDEBAR (FIXED 248px) -->
+        <!-- SIDEBAR -->
         <aside id="sidebar" class="sidebar">
             <div class="sidebar-header">
                 <div class="sidebar-brand">
-                    <div class="brand-symbol-sm">
-                        <svg width="24" height="24" viewBox="0 0 32 32" fill="none">
-                            <rect width="32" height="32" rx="8" fill="#554AE8"/>
-                            <path d="M9 16L14 21L23 11" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                    <div class="brand-logo-sm">
+                        <svg width="22" height="22" viewBox="0 0 32 32" fill="none">
+                            <rect x="6" y="4" width="20" height="24" rx="4" stroke="#4169E1" stroke-width="2.5" fill="none"/>
+                            <path d="M11 16L14.5 19.5L21 12" stroke="#D4AF37" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
                         </svg>
                     </div>
                     <span class="sidebar-brand-text">ClaimProof <span>AI</span></span>
@@ -116,7 +78,7 @@
                     </a>
                     <a href="#" class="nav-item" data-view="workspace">
                         <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
-                        <span class="nav-label">Claim Review Workspace</span>
+                        <span class="nav-label">Claim Review Center</span>
                     </a>
                     <a href="#" class="nav-item" data-view="documents">
                         <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
@@ -140,7 +102,7 @@
                     <span class="nav-section-title">SYSTEM</span>
                     <a href="#" class="nav-item" data-view="history">
                         <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                        <span class="nav-label">Audit History</span>
+                        <span class="nav-label">Activity History</span>
                     </a>
                     <a href="#" class="nav-item" data-view="settings">
                         <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
@@ -160,7 +122,7 @@
             </div>
         </aside>
 
-        <!-- MAIN AREA (FLEX: 1, MIN-WIDTH: 0) -->
+        <!-- MAIN AREA -->
         <div class="main-area">
             
             <!-- TOP HEADER -->
@@ -171,7 +133,7 @@
                     </button>
                     <div class="page-title-group">
                         <h2 id="header-page-title" class="page-title">Dashboard</h2>
-                        <span id="header-page-subtitle" class="page-subtitle">Overview of your claim investigation workspace</span>
+                        <span id="header-page-subtitle" class="page-subtitle">Overview of your claim review workspace</span>
                     </div>
                 </div>
 
@@ -189,25 +151,23 @@
 
                     <div class="system-status-indicator" id="server-status-pill">
                         <span class="dot green"></span>
-                        <span class="status-text">System Ready</span>
+                        <span class="status-text">Ready</span>
                     </div>
                 </div>
             </header>
 
 
-            <!-- MAIN CONTENT CONTAINER (FULL WIDTH) -->
+            <!-- MAIN CONTENT CONTAINER -->
             <main class="main-content">
 
-                <!-- ========================================== -->
-                <!-- 02. DASHBOARD VIEW (FULL-WIDTH GRID)       -->
-                <!-- ========================================== -->
+                <!-- 02. DASHBOARD VIEW -->
                 <div id="view-dashboard" class="content-view">
                     
                     <!-- Welcome Hero Banner -->
                     <div class="hero-banner">
                         <div class="hero-text-content">
                             <h2 class="hero-title">Good morning, Jaswant</h2>
-                            <p class="hero-subtitle">You have 4 claims ready for review and 5 cases requiring investigator attention.</p>
+                            <p class="hero-subtitle">You have 4 claims ready for review and 5 cases requiring attention.</p>
                         </div>
                         <div class="hero-btn-group">
                             <button class="btn-primary-md" onclick="openNewClaimModal()">
@@ -232,11 +192,11 @@
 
                         <div class="metric-card">
                             <div class="metric-header">
-                                <span class="metric-label">Needs Investigation</span>
+                                <span class="metric-label">Needs Review</span>
                                 <span class="metric-icon warning">⚠️</span>
                             </div>
                             <div class="metric-value">5</div>
-                            <div class="metric-footer neutral">Requires investigator action</div>
+                            <div class="metric-footer neutral">Action required</div>
                         </div>
 
                         <div class="metric-card">
@@ -258,15 +218,13 @@
                         </div>
                     </div>
 
-                    <!-- ROW 1: Recent Claims (65%) + Quick Actions (35%) -->
+                    <!-- ROW 1: Recent Claims + Quick Actions -->
                     <div class="dashboard-row-1">
-                        
-                        <!-- Recent Claims Card -->
                         <div class="card-panel">
                             <div class="panel-header">
                                 <div>
                                     <h3 class="panel-title">Recent Claim Reviews</h3>
-                                    <span class="panel-subtitle">Latest evidence evaluations and investigator audit trails</span>
+                                    <span class="panel-subtitle">Latest evidence evaluations and review actions</span>
                                 </div>
                                 <button class="btn-ghost-sm" onclick="navigateTo('claims')">View All →</button>
                             </div>
@@ -279,8 +237,9 @@
                                             <th>Customer / Vehicle</th>
                                             <th>Incident Type</th>
                                             <th>Amount</th>
-                                            <th>Recommendation</th>
+                                            <th>Suggested Next Step</th>
                                             <th>Status</th>
+                                            <th>Action</th>
                                         </tr>
                                     </thead>
                                     <tbody id="dashboard-recent-claims-body">
@@ -290,7 +249,6 @@
                             </div>
                         </div>
 
-                        <!-- Quick Actions Panel -->
                         <div class="card-panel">
                             <div class="panel-header">
                                 <h3 class="panel-title">Quick Actions</h3>
@@ -326,17 +284,16 @@
                                 <div class="qa-item" onclick="navigateTo('workspace')">
                                     <div class="qa-icon-sm amber">🔍</div>
                                     <div class="qa-text">
-                                        <strong>Review Workspace</strong>
+                                        <strong>Claim Review Center</strong>
                                         <span>Open active claim review</span>
                                     </div>
                                     <span class="qa-arrow">→</span>
                                 </div>
                             </div>
                         </div>
-
                     </div>
 
-                    <!-- ROW 2: Interactive Demo Claims (100% width) -->
+                    <!-- ROW 2: Interactive Demo Claims -->
                     <div class="card-panel mb-24">
                         <div class="panel-header">
                             <div>
@@ -372,7 +329,7 @@
                                     <span class="demo-id">CLM-003</span>
                                 </div>
                                 <h4>Case 3: Date Contradiction</h4>
-                                <p>Factual mismatch: Claim Form date (Aug 21) vs Police FIR date (Aug 22).</p>
+                                <p>Information mismatch: Claim Form date (Aug 21) vs Police FIR date (Aug 22).</p>
                                 <button class="btn-demo-trigger escalate">Run Evaluation →</button>
                             </div>
 
@@ -388,7 +345,7 @@
                         </div>
                     </div>
 
-                    <!-- ROW 3: Claim Activity Overview + Important Operational Findings -->
+                    <!-- ROW 3: Claim Processing Breakdown -->
                     <div class="dashboard-row-1">
                         <div class="card-panel">
                             <h3 class="panel-title">Claim Processing Breakdown</h3>
@@ -415,7 +372,7 @@
                                 <div class="insight-item">
                                     <span class="insight-icon danger">🚨</span>
                                     <div>
-                                        <strong>Date contradiction in CLM-003</strong>
+                                        <strong>Date mismatch in CLM-003</strong>
                                         <span class="insight-sub">Claim Form (Aug 21) vs FIR (Aug 22).</span>
                                     </div>
                                 </div>
@@ -433,12 +390,8 @@
                 </div>
 
 
-                <!-- ========================================== -->
-                <!-- 03. CLAIM REVIEW WORKSPACE                -->
-                <!-- ========================================== -->
+                <!-- 03. CLAIM REVIEW CENTER (WORKSPACE VIEW) -->
                 <div id="view-workspace" class="content-view hidden">
-                    
-                    <!-- Workspace Header Bar -->
                     <div class="workspace-header-bar">
                         <div class="ws-title-area">
                             <button class="btn-back" onclick="navigateTo('claims')">← Claims</button>
@@ -448,29 +401,23 @@
                         </div>
 
                         <div class="ws-actions">
-                            <button class="btn-secondary-sm" onclick="showToast('Export Report', 'Generated PDF export report.', 'info')">
+                            <button class="btn-secondary-sm" onclick="showToast('Download Report', 'Report downloaded successfully.', 'info')">
                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                                <span>Export Report</span>
+                                <span>Download Report</span>
                             </button>
                         </div>
                     </div>
 
-                    <!-- 3-Panel Workspace Grid -->
                     <div class="workspace-3panel-grid">
-                        
-                        <!-- LEFT PANEL: Documents & Policy -->
+                        <!-- LEFT PANEL -->
                         <div class="ws-panel-left card-panel">
                             <div class="panel-section">
-                                <h4 class="panel-section-title">Submitted Documents</h4>
-                                <div class="doc-checklist-group" id="ws-doc-list">
-                                    <!-- Dynamic document items -->
-                                </div>
+                                <h4 class="panel-section-title">Uploaded Documents</h4>
+                                <div class="doc-checklist-group" id="ws-doc-list"></div>
                             </div>
-
                             <div class="panel-divider"></div>
-
                             <div class="panel-section">
-                                <h4 class="panel-section-title">Applicable Policy</h4>
+                                <h4 class="panel-section-title">Relevant Policy</h4>
                                 <div class="policy-meta-box">
                                     <span class="policy-name">Apex Motor Policy 2026</span>
                                     <span class="policy-sub">7 pages • 10 clauses indexed</span>
@@ -479,56 +426,38 @@
                             </div>
                         </div>
 
-
-                        <!-- CENTER PANEL: Claim Overview, Contradictions, Evidence Matrix -->
+                        <!-- CENTER PANEL -->
                         <div class="ws-panel-center flex-column gap-16">
-                            
-                            <!-- Facts Card -->
                             <div class="card-panel">
-                                <h4 class="panel-title">Claim Overview & Extracted Facts</h4>
+                                <h4 class="panel-title">Claim Summary & Extracted Details</h4>
                                 <div class="facts-grid mt-12">
-                                    <div class="fact-item">
-                                        <span class="fact-label">Claimant Name</span>
-                                        <strong id="ws-fact-name" class="fact-val">-</strong>
-                                    </div>
-                                    <div class="fact-item">
-                                        <span class="fact-label">Vehicle Registration</span>
-                                        <strong id="ws-fact-vehicle" class="fact-val">-</strong>
-                                    </div>
-                                    <div class="fact-item">
-                                        <span class="fact-label">Incident Date</span>
-                                        <strong id="ws-fact-date" class="fact-val">-</strong>
-                                    </div>
-                                    <div class="fact-item">
-                                        <span class="fact-label">Claimed Amount</span>
-                                        <strong id="ws-fact-amount" class="fact-val">-</strong>
-                                    </div>
+                                    <div class="fact-item"><span class="fact-label">Claimant Name</span><strong id="ws-fact-name" class="fact-val">-</strong></div>
+                                    <div class="fact-item"><span class="fact-label">Vehicle Registration</span><strong id="ws-fact-vehicle" class="fact-val">-</strong></div>
+                                    <div class="fact-item"><span class="fact-label">Incident Date</span><strong id="ws-fact-date" class="fact-val">-</strong></div>
+                                    <div class="fact-item"><span class="fact-label">Claimed Amount</span><strong id="ws-fact-amount" class="fact-val">-</strong></div>
                                 </div>
                             </div>
 
-                            <!-- Factual Contradictions Box -->
                             <div id="ws-contradiction-card" class="card-panel alert-panel hidden">
                                 <div class="alert-panel-header">
-                                    <h4>⚠️ Factual Contradictions Detected</h4>
-                                    <span class="badge-pill danger">CRITICAL</span>
+                                    <h4>⚠️ Information That Doesn’t Match</h4>
+                                    <span class="badge-pill danger">IMPORTANT</span>
                                 </div>
                                 <div id="ws-contradictions-container" class="contradiction-list mt-12"></div>
                             </div>
 
-                            <!-- Document Completeness Card -->
                             <div class="card-panel">
                                 <div class="panel-header">
-                                    <h4 class="panel-title">Document Completeness Check</h4>
+                                    <h4 class="panel-title">Missing or Available Documents</h4>
                                     <span id="ws-completeness-status" class="badge-pill success">COMPLETE</span>
                                 </div>
                                 <div id="ws-completeness-checklist" class="completeness-pills-grid mt-12"></div>
                             </div>
 
-                            <!-- Evidence Matrix Table -->
                             <div class="card-panel">
                                 <div class="panel-header">
-                                    <h4 class="panel-title">Cross-Document Evidence Matrix</h4>
-                                    <span class="panel-subtitle">Click any row to view provenance & source page</span>
+                                    <h4 class="panel-title">Information Found Across Your Documents</h4>
+                                    <span class="panel-subtitle">Select a row to see where this information came from.</span>
                                 </div>
                                 <div class="table-container mt-12">
                                     <table class="saas-table compact">
@@ -538,92 +467,83 @@
                                                 <th>Extracted Value</th>
                                                 <th>Source Document</th>
                                                 <th>Page</th>
-                                                <th>Confidence</th>
+                                                <th>How certain this result is</th>
                                             </tr>
                                         </thead>
-                                        <tbody id="ws-evidence-table-body">
-                                            <!-- Dynamic evidence items -->
-                                        </tbody>
+                                        <tbody id="ws-evidence-table-body"></tbody>
                                     </table>
                                 </div>
                             </div>
 
-                            <!-- Policy Clause Evaluation -->
                             <div class="card-panel">
-                                <h4 class="panel-title">Policy Clause Grounding & Evaluation</h4>
-                                <span class="panel-subtitle">Matching evidence against synthetic motor policy clauses</span>
+                                <h4 class="panel-title">Policy Clause Matching</h4>
+                                <span class="panel-subtitle">Matching extracted details against relevant policy clauses</span>
                                 <div id="ws-policy-clauses-list" class="policy-cards-grid mt-12"></div>
                             </div>
-
                         </div>
 
-
-                        <!-- RIGHT PANEL: AI Recommendation & Action Buttons -->
+                        <!-- RIGHT PANEL: GUIDED ACTION RECOMMENDATION CARD -->
                         <div class="ws-panel-right flex-column gap-16">
-                            
-                            <!-- Recommendation Card -->
                             <div id="ws-rec-card" class="card-panel recommendation-card approve">
-                                <span class="rec-prehead">AI GROUNDED RECOMMENDATION</span>
+                                <span class="rec-prehead">Recommended Next Step</span>
                                 <h2 id="ws-rec-title" class="rec-main-title">APPROVE</h2>
-                                <p id="ws-rec-summary" class="rec-summary-text">All mandatory documents submitted, consistent dates & repair estimate within IDV limit.</p>
+                                <p id="ws-rec-summary" class="rec-summary-text">All mandatory documents submitted, consistent dates & repair estimate within limit.</p>
                                 
                                 <div class="rec-divider"></div>
-
+                                
                                 <div class="rec-section">
-                                    <span class="rec-section-title">Investigator Reasoning</span>
+                                    <span class="rec-section-title">Why this step is suggested</span>
                                     <div id="ws-rec-explanation" class="rec-explanation-body"></div>
                                 </div>
 
-                                <div class="rec-actions-box mt-16">
-                                    <span class="rec-section-title">Investigator Final Decision</span>
-                                    <div class="action-buttons-grid mt-8">
-                                        <button class="btn-decision approve" onclick="executeDecision('APPROVE')">✓ Approve</button>
-                                        <button class="btn-decision request" onclick="executeDecision('REQUEST_INFORMATION')">? Request Info</button>
-                                        <button class="btn-decision escalate" onclick="executeDecision('ESCALATE')">▲ Escalate</button>
-                                        <button class="btn-decision reject" onclick="executeDecision('REJECT')">✕ Reject</button>
+                                <div class="rec-section mt-12">
+                                    <span class="rec-section-title">What you should do</span>
+                                    <div id="ws-rec-guidance" class="rec-guidance-text">Review the verified details and take the recommended review action below.</div>
+                                </div>
+
+                                <div class="rec-divider"></div>
+
+                                <!-- GUIDED ACTION BUTTONS CONTAINER (DYNAMIC UX HIERARCHY) -->
+                                <div class="rec-actions-box">
+                                    <span class="rec-section-title">Final Review Action</span>
+                                    <div id="ws-guided-actions" class="guided-actions-wrapper mt-12">
+                                        <!-- Rendered dynamically in app.js based on recommendation -->
                                     </div>
                                 </div>
                             </div>
 
-                            <!-- Quick Assistant Prompts -->
                             <div class="card-panel">
-                                <h4 class="panel-title">Quick Investigator Prompts</h4>
+                                <h4 class="panel-title">Helpful Questions</h4>
                                 <div class="quick-prompts-list mt-8">
                                     <button class="btn-prompt-chip" onclick="askAssistant('Why is this claim flagged?')">Why is this claim flagged?</button>
                                     <button class="btn-prompt-chip" onclick="askAssistant('Which policy clauses apply?')">Which policy clauses apply?</button>
-                                    <button class="btn-prompt-chip" onclick="askAssistant('Show all contradictions')">Show all contradictions</button>
+                                    <button class="btn-prompt-chip" onclick="askAssistant('Show all information that doesn\'t match')">Show information that doesn't match</button>
                                     <button class="btn-prompt-chip" onclick="askAssistant('What information is missing?')">What information is missing?</button>
                                 </div>
                             </div>
-
                         </div>
-
                     </div>
 
-                    <!-- Bottom Composer Bar -->
                     <div class="workspace-composer-bar">
                         <div class="composer-input-wrapper">
                             <span class="composer-icon">✨</span>
-                            <input type="text" id="ws-assistant-input" placeholder="Ask ClaimProof about this claim or policy grounding..." autocomplete="off">
+                            <input type="text" id="ws-assistant-input" placeholder="Ask ClaimProof about this claim or policy details..." autocomplete="off">
                             <button id="ws-assistant-send-btn" class="btn-primary-sm composer-send">
                                 <span>Send</span>
                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
                             </button>
                         </div>
                     </div>
-
                 </div>
 
 
-                <!-- ========================================== -->
-                <!-- 04. CLAIMS REGISTRY VIEW                   -->
-                <!-- ========================================== -->
+                <!-- 04. CLAIMS VIEW -->
                 <div id="view-claims" class="content-view hidden">
                     <div class="card-panel">
                         <div class="panel-header">
                             <div>
-                                <h3 class="panel-title">Claims Registry</h3>
-                                <span class="panel-subtitle">Manage and search all motor insurance claim packages</span>
+                                <h3 class="panel-title">Claims</h3>
+                                <span class="panel-subtitle">Manage and review motor insurance claim packages</span>
                             </div>
                             <button class="btn-primary-sm" onclick="openNewClaimModal()">+ New Claim Review</button>
                         </div>
@@ -632,7 +552,7 @@
                             <div class="pill-filters" id="claims-filter-pills">
                                 <button class="filter-pill active" data-filter="all">All Claims</button>
                                 <button class="filter-pill" data-filter="APPROVE">Approved</button>
-                                <button class="filter-pill" data-filter="REQUEST_INFORMATION">Request Info</button>
+                                <button class="filter-pill" data-filter="REQUEST_INFORMATION">Need More Info</button>
                                 <button class="filter-pill" data-filter="ESCALATE">Escalated</button>
                                 <button class="filter-pill" data-filter="REJECT">Rejected</button>
                             </div>
@@ -649,22 +569,18 @@
                                         <th>Incident Type</th>
                                         <th>Date</th>
                                         <th>Claimed Amount</th>
-                                        <th>Recommendation</th>
-                                        <th>Actions</th>
+                                        <th>Suggested Next Step</th>
+                                        <th>Action</th>
                                     </tr>
                                 </thead>
-                                <tbody id="claims-table-body">
-                                    <!-- Populated dynamically -->
-                                </tbody>
+                                <tbody id="claims-table-body"></tbody>
                             </table>
                         </div>
                     </div>
                 </div>
 
 
-                <!-- ========================================== -->
-                <!-- 05. DOCUMENTS REPOSITORY VIEW              -->
-                <!-- ========================================== -->
+                <!-- 05. DOCUMENTS VIEW -->
                 <div id="view-documents" class="content-view hidden">
                     <div class="card-panel">
                         <div class="panel-header">
@@ -693,18 +609,14 @@
                                         <th>Actions</th>
                                     </tr>
                                 </thead>
-                                <tbody id="documents-table-body">
-                                    <!-- Populated dynamically -->
-                                </tbody>
+                                <tbody id="documents-table-body"></tbody>
                             </table>
                         </div>
                     </div>
                 </div>
 
 
-                <!-- ========================================== -->
-                <!-- 06. POLICY LIBRARY VIEW                    -->
-                <!-- ========================================== -->
+                <!-- 06. POLICY LIBRARY VIEW -->
                 <div id="view-policies" class="content-view hidden">
                     <div class="card-panel">
                         <div class="panel-header">
@@ -719,16 +631,12 @@
                             <input type="text" id="policy-library-search" class="input-md" placeholder="Search policy clauses (e.g. 'commercial exclusion', 'theft', '7 days', 'IDV')...">
                         </div>
 
-                        <div id="policy-library-grid" class="policy-cards-grid mt-16">
-                            <!-- Populated dynamically -->
-                        </div>
+                        <div id="policy-library-grid" class="policy-cards-grid mt-16"></div>
                     </div>
                 </div>
 
 
-                <!-- ========================================== -->
-                <!-- 07. ANALYTICS VIEW                         -->
-                <!-- ========================================== -->
+                <!-- 07. ANALYTICS VIEW -->
                 <div id="view-analytics" class="content-view hidden">
                     <div class="metrics-row">
                         <div class="metric-card">
@@ -737,7 +645,7 @@
                             <span class="metric-footer neutral">1 of 4 demo claims approved</span>
                         </div>
                         <div class="metric-card">
-                            <span class="metric-label">Contradiction Frequency</span>
+                            <span class="metric-label">Information Mismatch Rate</span>
                             <div class="metric-value">25.0%</div>
                             <span class="metric-footer warning">Date & Amount conflicts</span>
                         </div>
@@ -755,7 +663,7 @@
 
                     <div class="grid-2col mt-16">
                         <div class="card-panel">
-                            <h4 class="panel-title">Recommendation Distribution</h4>
+                            <h4 class="panel-title">Suggested Next Step Distribution</h4>
                             <div class="chart-mock-box mt-12">
                                 <div class="bar-row"><span class="bar-label">APPROVE</span><div class="bar-fill green" style="width: 25%;"></div><span>1</span></div>
                                 <div class="bar-row"><span class="bar-label">REQ INFO</span><div class="bar-fill amber" style="width: 25%;"></div><span>1</span></div>
@@ -776,28 +684,22 @@
                 </div>
 
 
-                <!-- ========================================== -->
-                <!-- 08. AUDIT HISTORY VIEW                     -->
-                <!-- ========================================== -->
+                <!-- 08. ACTIVITY HISTORY VIEW -->
                 <div id="view-history" class="content-view hidden">
                     <div class="card-panel">
                         <div class="panel-header">
                             <div>
-                                <h3 class="panel-title">Audit History & Event Log</h3>
-                                <span class="panel-subtitle">Immutable timeline of claim extractions, contradiction checks, and investigator decisions</span>
+                                <h3 class="panel-title">Activity History & Event Log</h3>
+                                <span class="panel-subtitle">Timeline of claim extractions, mismatch checks, and review actions</span>
                             </div>
                         </div>
 
-                        <div class="timeline-container mt-16" id="audit-timeline">
-                            <!-- Populated dynamically -->
-                        </div>
+                        <div class="timeline-container mt-16" id="audit-timeline"></div>
                     </div>
                 </div>
 
 
-                <!-- ========================================== -->
-                <!-- 09. SETTINGS VIEW                          -->
-                <!-- ========================================== -->
+                <!-- 09. SETTINGS VIEW -->
                 <div id="view-settings" class="content-view hidden">
                     <div class="card-panel">
                         <h3 class="panel-title">Workspace Settings</h3>
@@ -828,11 +730,7 @@
     </div>
 
 
-    <!-- ========================================== -->
-    <!-- GLOBAL OVERLAYS & MODALS                   -->
-    <!-- ========================================== -->
-
-    <!-- NEW CLAIM REVIEW MODAL -->
+    <!-- OVERLAYS & MODALS -->
     <div id="modal-new-claim" class="modal-overlay hidden">
         <div class="modal-card">
             <div class="modal-header">
@@ -873,26 +771,21 @@
         </div>
     </div>
 
-
-    <!-- STAGED PROCESSING MODAL -->
     <div id="modal-processing" class="modal-overlay hidden">
         <div class="modal-card processing-card">
             <div class="spinner-large"></div>
             <h3>Analyzing Claim Evidence...</h3>
             <p class="processing-subtitle">Running document extraction & policy clause matching</p>
-            
             <div class="processing-steps-list">
                 <div class="p-step complete" id="pstep-1">✓ Reading claim documents</div>
-                <div class="p-step complete" id="pstep-2">✓ Extracting structured facts & provenance</div>
-                <div class="p-step active" id="pstep-3">● Checking document completeness</div>
-                <div class="p-step pending" id="pstep-4">○ Detecting factual contradictions</div>
+                <div class="p-step complete" id="pstep-2">✓ Extracting structured details</div>
+                <div class="p-step active" id="pstep-3">● Checking document availability</div>
+                <div class="p-step pending" id="pstep-4">○ Checking for information mismatches</div>
                 <div class="p-step pending" id="pstep-5">○ Grounding policy clauses & decision logic</div>
             </div>
         </div>
     </div>
 
-
-    <!-- DOCUMENT PREVIEW DRAWER -->
     <div id="drawer-document" class="drawer-overlay hidden">
         <div class="drawer-card">
             <div class="drawer-header">
@@ -904,43 +797,31 @@
                     <span id="drawer-doc-type" class="badge-pill info">CLAIM FORM</span>
                     <span id="drawer-doc-pages">Page 1 of 1</span>
                 </div>
-                <div class="doc-text-content" id="drawer-doc-content">
-                    <!-- Raw page text -->
-                </div>
+                <div class="doc-text-content" id="drawer-doc-content"></div>
             </div>
         </div>
     </div>
 
-
-    <!-- EVIDENCE DETAIL DRAWER -->
     <div id="drawer-evidence" class="drawer-overlay hidden">
         <div class="drawer-card">
             <div class="drawer-header">
-                <h3>Evidence Fact Provenance</h3>
+                <h3>Extracted Evidence Provenance</h3>
                 <button class="modal-close-btn" onclick="closeDrawer('drawer-evidence')">✕</button>
             </div>
-            <div class="drawer-body" id="drawer-evidence-body">
-                <!-- Evidence details -->
-            </div>
+            <div class="drawer-body" id="drawer-evidence-body"></div>
         </div>
     </div>
 
-
-    <!-- POLICY CLAUSE DRAWER -->
     <div id="drawer-policy" class="drawer-overlay hidden">
         <div class="drawer-card">
             <div class="drawer-header">
                 <h3 id="drawer-policy-id">Clause 2.1</h3>
                 <button class="modal-close-btn" onclick="closeDrawer('drawer-policy')">✕</button>
             </div>
-            <div class="drawer-body" id="drawer-policy-body">
-                <!-- Clause details -->
-            </div>
+            <div class="drawer-body" id="drawer-policy-body"></div>
         </div>
     </div>
 
-
-    <!-- COMMAND SEARCH PALETTE (CTRL + K) -->
     <div id="modal-command-palette" class="modal-overlay hidden">
         <div class="command-palette-card">
             <div class="command-search-header">
@@ -948,14 +829,10 @@
                 <input type="text" id="cmd-input" placeholder="Type a command or search claims..." autocomplete="off">
                 <kbd class="shortcut-kbd">ESC to close</kbd>
             </div>
-            <div class="command-results-list" id="cmd-results">
-                <!-- Dynamic search items -->
-            </div>
+            <div class="command-results-list" id="cmd-results"></div>
         </div>
     </div>
 
-
-    <!-- TOAST CONTAINER -->
     <div id="toast-container" class="toast-container"></div>
 
     <script src="/static/app.js"></script>

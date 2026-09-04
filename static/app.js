@@ -19,7 +19,6 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function initApp() {
-    // Populate default synthetic claims into memory for instant responsiveness
     fetchDemoCasesList();
 }
 
@@ -29,7 +28,7 @@ async function checkHealth() {
         const data = await res.json();
         const statusPill = document.getElementById('server-status-pill');
         if (data.status === 'ok') {
-            statusPill.innerHTML = `<span class="dot green"></span> System Ready`;
+            statusPill.innerHTML = `<span class="dot green"></span> Ready`;
         }
     } catch (e) {
         console.warn('Health check fallback:', e);
@@ -66,6 +65,13 @@ function setupEventListeners() {
         }
     });
 
+    // Global Click Handler to close dropdown menus
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('.more-actions-dropdown')) {
+            document.querySelectorAll('.more-actions-menu').forEach(el => el.classList.add('hidden'));
+        }
+    });
+
     document.getElementById('cmd-search-trigger')?.addEventListener('click', toggleCommandPalette);
     document.getElementById('cmd-input')?.addEventListener('input', (e) => handleCmdSearch(e.target.value));
 
@@ -92,7 +98,7 @@ function enterWorkspace() {
         welcome.classList.add('hidden');
         shell.classList.remove('hidden');
         navigateTo('dashboard');
-        showToast('Welcome to ClaimProof AI', 'Workspace ready for evidence investigation.', 'success');
+        showToast('Welcome to ClaimProof AI', 'Workspace ready for claim reviews.', 'success');
     }, 350);
 }
 
@@ -110,15 +116,15 @@ function navigateTo(viewName) {
         else el.classList.remove('active');
     });
 
-    // Update header title
+    // Human-friendly header titles
     const titles = {
-        'dashboard': ['Dashboard', 'Overview of your claim investigation workspace'],
-        'claims': ['Claims Registry', 'Manage and review motor insurance claim packages'],
-        'workspace': ['Claim Review Workspace', 'Interactive evidence review, contradiction check & policy citation'],
+        'dashboard': ['Dashboard', 'Overview of your claim review workspace'],
+        'claims': ['Claims', 'Manage and review motor insurance claim packages'],
+        'workspace': ['Claim Review Center', 'Interactive evidence review, missing document check & policy citation'],
         'documents': ['Document Repository', 'Extracted PDF and TXT files organized by document type'],
         'policies': ['Policy Library', 'Motor insurance clauses, exclusions and IDV limits'],
-        'analytics': ['Analytics & KPIs', 'Claim approval metrics, missing docs and contradiction trends'],
-        'history': ['Audit History', 'Immutable log of claim extractions and investigator actions'],
+        'analytics': ['Analytics & KPIs', 'Claim approval metrics, missing docs and information mismatch trends'],
+        'history': ['Activity History', 'Timeline of claim extractions and review actions'],
         'settings': ['Settings', 'Workspace configuration and investigator profile']
     };
 
@@ -151,7 +157,6 @@ async function fetchDemoCasesList() {
         const res = await fetch('/api/demo-cases');
         if (res.ok) {
             const data = await res.json();
-            // Pre-seed first claim
             runDemoClaim('claim_001_approve', false);
         }
     } catch (e) {
@@ -169,13 +174,11 @@ async function runDemoClaim(caseId, navigate = true) {
 
         state.activeClaim = data;
 
-        // Add to claims list if absent
         const idx = state.claimsList.findIndex(c => c.claim_id === data.claim_id);
         if (idx >= 0) state.claimsList[idx] = data;
         else state.claimsList.unshift(data);
 
-        // Add audit log
-        addAuditLog(data.claim_id, `Analyzed claim package (Recommendation: ${data.recommendation})`);
+        addAuditLog(data.claim_id, `Analyzed claim package (Suggested Next Step: ${data.recommendation})`);
 
         if (navigate) {
             setTimeout(() => {
@@ -183,7 +186,7 @@ async function runDemoClaim(caseId, navigate = true) {
                 renderWorkspace(data);
                 renderDashboardRecentTable();
                 navigateTo('workspace');
-                showToast('Claim Analysis Complete', `Recommendation generated: ${data.recommendation}`, 'success');
+                showToast('Claim Analysis Complete', `Suggested Next Step: ${formatRecText(data.recommendation)}`, 'success');
             }, 600);
         } else {
             renderWorkspace(data);
@@ -234,7 +237,7 @@ async function handleCustomClaimSubmit(event) {
             renderWorkspace(data);
             renderDashboardRecentTable();
             navigateTo('workspace');
-            showToast('Custom Claim Analyzed', `Recommendation: ${data.recommendation}`, 'success');
+            showToast('Custom Claim Analyzed', `Suggested Next Step: ${formatRecText(data.recommendation)}`, 'success');
         }, 600);
 
     } catch (e) {
@@ -256,10 +259,10 @@ function renderWorkspace(claim) {
     document.getElementById('ws-incident-badge').innerText = (claim.incident_type || 'ACCIDENT').toUpperCase();
 
     const statusBadge = document.getElementById('ws-status-badge');
-    statusBadge.innerText = claim.recommendation;
+    statusBadge.innerText = formatRecText(claim.recommendation);
     statusBadge.className = `badge-pill ${getBadgeClass(claim.recommendation)}`;
 
-    // Left Panel: Submitted Docs Checklist
+    // Left Panel: Uploaded Docs Checklist
     const docList = document.getElementById('ws-doc-list');
     docList.innerHTML = '';
     const reqDocs = claim.completeness?.required_documents || [];
@@ -273,17 +276,17 @@ function renderWorkspace(claim) {
             <span>${isMissing ? '❌' : '✅'}</span>
             <strong>${doc.replace('_', ' ').toUpperCase()}</strong>
         `;
-        div.onclick = () => openDocumentDrawer(`${doc}.pdf`, claim.evidence_items?.find(e => e.source_document.includes(doc))?.raw_text || "Document text content extracted from PyMuPDF.");
+        div.onclick = () => openDocumentDrawer(`${doc}.pdf`, claim.evidence_items?.find(e => e.source_document.includes(doc))?.raw_text || "Document text content extracted.");
         docList.appendChild(div);
     });
 
-    // Center Panel: Facts Overview
+    // Center Panel: Claim Summary Details
     document.getElementById('ws-fact-name').innerText = claim.customer_name || 'Rajesh Sharma';
     document.getElementById('ws-fact-vehicle').innerText = claim.vehicle_number || 'KA01MJ4921';
     document.getElementById('ws-fact-date').innerText = claim.incident_date || '2026-08-21';
     document.getElementById('ws-fact-amount').innerText = claim.claimed_amount ? `INR ${Number(claim.claimed_amount).toLocaleString('en-IN')}` : 'INR 0';
 
-    // Contradictions Card
+    // Contradictions / Information Mismatch Card
     const cCard = document.getElementById('ws-contradiction-card');
     const cContainer = document.getElementById('ws-contradictions-container');
     const contradictions = claim.contradictions || [];
@@ -308,11 +311,11 @@ function renderWorkspace(claim) {
         cCard.classList.add('hidden');
     }
 
-    // Completeness Checklist Pills
+    // Missing or Available Documents Checklist
     const compChecklist = document.getElementById('ws-completeness-checklist');
     compChecklist.innerHTML = '';
     const isComplete = claim.completeness?.is_complete;
-    document.getElementById('ws-completeness-status').innerText = isComplete ? 'COMPLETE' : 'INCOMPLETE';
+    document.getElementById('ws-completeness-status').innerText = isComplete ? 'ALL DOCUMENTS SUBMITTED' : 'MISSING DOCUMENTS';
     document.getElementById('ws-completeness-status').className = `badge-pill ${isComplete ? 'success' : 'danger'}`;
 
     reqDocs.forEach(d => {
@@ -332,10 +335,10 @@ function renderWorkspace(claim) {
         tr.onclick = () => openEvidenceDrawer(item);
         tr.innerHTML = `
             <td><strong>${item.field_name}</strong></td>
-            <td><code style="color:#4f46e5;">${item.value || 'null'}</code></td>
+            <td><code style="color:#5B6CFF; font-weight:bold;">${item.value || 'null'}</code></td>
             <td>${item.source_document}</td>
             <td>Page ${item.page_number}</td>
-            <td>${(item.confidence * 100).toFixed(0)}%</td>
+            <td>${(item.confidence * 100).toFixed(0)}% certain</td>
         `;
         evTbody.appendChild(tr);
     });
@@ -353,25 +356,129 @@ function renderWorkspace(claim) {
                 <span class="status-chip ${getBadgeClass(pa.classification)}">${pa.classification}</span>
             </div>
             <div class="p-eval-text">"${pa.clause_text}"</div>
-            <div class="p-eval-reason"><strong>Grounding Reason:</strong> ${pa.reasoning}</div>
+            <div class="p-eval-reason"><strong>Why this clause applies:</strong> ${pa.reasoning}</div>
         `;
         policyGrid.appendChild(card);
     });
 
-    // Right Panel: Recommendation Card
+    // Right Panel: Recommendation Details
     const recCard = document.getElementById('ws-rec-card');
     const recType = claim.recommendation || 'APPROVE';
     recCard.className = `card-panel recommendation-card ${recType.toLowerCase()}`;
-    document.getElementById('ws-rec-title').innerText = recType.replace('_', ' ');
+    document.getElementById('ws-rec-title').innerText = formatRecText(recType);
 
     let summaryText = "";
-    if (recType === 'APPROVE') summaryText = "Complete evidence, valid policy coverage & limits verified.";
-    else if (recType === 'REQUEST_INFORMATION') summaryText = "Mandatory required driving licence document missing.";
-    else if (recType === 'ESCALATE') summaryText = "Material date contradiction between Claim Form & FIR.";
-    else if (recType === 'REJECT') summaryText = "Prohibited commercial ride-share taxi use triggered Section 4.2 Exclusion.";
+    let guidanceText = "Review the details above and proceed with your action.";
+    if (recType === 'APPROVE') {
+        summaryText = "Complete documentation submitted, valid coverage dates, and repair estimate within limit.";
+        guidanceText = "Approve the claim package for processing.";
+    } else if (recType === 'REQUEST_INFORMATION') {
+        summaryText = "Mandatory driving licence document is missing from the submitted claim package.";
+        guidanceText = "Request the missing driving licence document from the claimant before proceeding.";
+    } else if (recType === 'ESCALATE') {
+        summaryText = "Information mismatch detected between Claim Form incident date and Police FIR date.";
+        guidanceText = "Escalate to senior review team to verify incident details.";
+    } else if (recType === 'REJECT') {
+        summaryText = "Vehicle operated as commercial ride-share taxi, triggering Exclusion Clause 4.2.";
+        guidanceText = "Reject claim based on commercial vehicle use exclusion.";
+    }
 
     document.getElementById('ws-rec-summary').innerText = summaryText;
     document.getElementById('ws-rec-explanation').innerText = claim.explanation || summaryText;
+    document.getElementById('ws-rec-guidance').innerText = guidanceText;
+
+    // Render Guided Actions Hierarchy
+    renderGuidedActions(recType);
+}
+
+
+/* ========================================== */
+/* GUIDED ACTION HIERARCHY RENDERER (UX FIX)  */
+/* ========================================== */
+
+function renderGuidedActions(recommendation) {
+    const container = document.getElementById('ws-guided-actions');
+    if (!container) return;
+    container.innerHTML = '';
+
+    const rec = (recommendation || 'APPROVE').toUpperCase();
+
+    let primary = { label: 'Approve Claim', type: 'APPROVE' };
+    let secondary = { label: 'Escalate Review', type: 'ESCALATE' };
+    let more = [
+        { label: 'Request Information', type: 'REQUEST_INFORMATION' },
+        { label: 'Reject Claim', type: 'REJECT' }
+    ];
+
+    if (rec === 'REQUEST_INFORMATION' || rec === 'REQ_INFO') {
+        primary = { label: 'Request Information', type: 'REQUEST_INFORMATION' };
+        secondary = { label: 'Escalate Review', type: 'ESCALATE' };
+        more = [
+            { label: 'Approve Claim', type: 'APPROVE' },
+            { label: 'Reject Claim', type: 'REJECT' }
+        ];
+    } else if (rec === 'REJECT') {
+        primary = { label: 'Reject Claim', type: 'REJECT' };
+        secondary = { label: 'Escalate Review', type: 'ESCALATE' };
+        more = [
+            { label: 'Approve Claim', type: 'APPROVE' },
+            { label: 'Request Information', type: 'REQUEST_INFORMATION' }
+        ];
+    } else if (rec === 'ESCALATE') {
+        primary = { label: 'Escalate Review', type: 'ESCALATE' };
+        secondary = { label: 'Request Information', type: 'REQUEST_INFORMATION' };
+        more = [
+            { label: 'Approve Claim', type: 'APPROVE' },
+            { label: 'Reject Claim', type: 'REJECT' }
+        ];
+    }
+
+    // 1. Primary Highlighted Button
+    const primaryBtn = document.createElement('button');
+    primaryBtn.className = 'btn-guided-primary';
+    primaryBtn.innerText = `✓ ${primary.label}`;
+    primaryBtn.onclick = () => executeDecision(primary.type);
+
+    // 2. Secondary Outlined Button
+    const secondaryBtn = document.createElement('button');
+    secondaryBtn.className = 'btn-guided-secondary';
+    secondaryBtn.innerText = secondary.label;
+    secondaryBtn.onclick = () => executeDecision(secondary.type);
+
+    // 3. More Actions Dropdown Menu
+    const dropdown = document.createElement('div');
+    dropdown.className = 'more-actions-dropdown';
+
+    const moreToggle = document.createElement('button');
+    moreToggle.className = 'btn-guided-more';
+    moreToggle.innerHTML = `More Actions ▾`;
+
+    const menu = document.createElement('div');
+    menu.className = 'more-actions-menu hidden';
+
+    more.forEach(item => {
+        const itemBtn = document.createElement('button');
+        itemBtn.className = 'more-action-item';
+        itemBtn.innerText = item.label;
+        itemBtn.onclick = (e) => {
+            e.stopPropagation();
+            menu.classList.add('hidden');
+            executeDecision(item.type);
+        };
+        menu.appendChild(itemBtn);
+    });
+
+    moreToggle.onclick = (e) => {
+        e.stopPropagation();
+        menu.classList.toggle('hidden');
+    };
+
+    dropdown.appendChild(moreToggle);
+    dropdown.appendChild(menu);
+
+    container.appendChild(primaryBtn);
+    container.appendChild(secondaryBtn);
+    container.appendChild(dropdown);
 }
 
 
@@ -393,9 +500,9 @@ function renderDashboardRecentTable() {
             <td>${c.customer_name} (${c.vehicle_number})</td>
             <td>${(c.incident_type || 'Accident').toUpperCase()}</td>
             <td>INR ${Number(c.claimed_amount || 0).toLocaleString('en-IN')}</td>
-            <td><span class="status-chip ${getBadgeClass(c.recommendation)}">${c.recommendation}</span></td>
+            <td><span class="status-chip ${getBadgeClass(c.recommendation)}">${formatRecText(c.recommendation)}</span></td>
             <td><span class="badge-pill ${c.completeness?.is_complete ? 'success' : 'warning'}">${c.completeness?.is_complete ? 'Complete' : 'Incomplete'}</span></td>
-            <td><button class="btn-ghost-sm">Review Workspace →</button></td>
+            <td><button class="btn-secondary-sm">Open Review →</button></td>
         `;
         tbody.appendChild(tr);
     });
@@ -415,8 +522,8 @@ function renderClaimsTable() {
             <td>${(c.incident_type || 'Accident').toUpperCase()}</td>
             <td>${c.incident_date}</td>
             <td>INR ${Number(c.claimed_amount || 0).toLocaleString('en-IN')}</td>
-            <td><span class="status-chip ${getBadgeClass(c.recommendation)}">${c.recommendation}</span></td>
-            <td><button class="btn-secondary-sm" onclick="openClaimWorkspace('${c.claim_id}')">Inspect</button></td>
+            <td><span class="status-chip ${getBadgeClass(c.recommendation)}">${formatRecText(c.recommendation)}</span></td>
+            <td><button class="btn-secondary-sm" onclick="openClaimWorkspace('${c.claim_id}')">Open Review</button></td>
         `;
         tbody.appendChild(tr);
     });
@@ -480,18 +587,18 @@ function renderAuditTimeline() {
     container.innerHTML = '';
 
     if (state.auditLogs.length === 0) {
-        container.innerHTML = `<p style="font-size:0.85rem; color:#64748b;">No investigator decisions recorded yet.</p>`;
+        container.innerHTML = `<p style="font-size:14px; color:#94A3B8;">No review actions recorded yet.</p>`;
         return;
     }
 
     state.auditLogs.forEach(log => {
         const div = document.createElement('div');
-        div.style.padding = '12px';
-        div.style.borderBottom = '1px solid #e2e8f0';
+        div.style.padding = '12px 0';
+        div.style.borderBottom = '1px solid #31427A';
         div.innerHTML = `
-            <div style="font-size:0.75rem; color:#94a3b8;">${log.timestamp}</div>
-            <strong style="font-size:0.88rem; color:#4f46e5;">Claim ${log.claimId}</strong>
-            <p style="font-size:0.82rem; color:#0f172a;">${log.action}</p>
+            <div style="font-size:12px; color:#94A3B8;">${log.timestamp}</div>
+            <strong style="font-size:14px; color:#5B6CFF;">Claim ${log.claimId}</strong>
+            <p style="font-size:14px; color:#F8FAFC; margin-top:2px;">${log.action}</p>
         `;
         container.appendChild(div);
     });
@@ -499,18 +606,19 @@ function renderAuditTimeline() {
 
 
 /* ========================================== */
-/* INVESTIGATOR DECISION & ASSISTANT ACTIONS  */
+/* REVIEW ACTION & ASSISTANT ACTIONS         */
 /* ========================================== */
 
 function executeDecision(decisionType) {
     if (!state.activeClaim) return;
 
     state.activeClaim.recommendation = decisionType;
-    addAuditLog(state.activeClaim.claim_id, `Investigator executed final decision: ${decisionType}`);
+    addAuditLog(state.activeClaim.claim_id, `Review action executed: ${formatRecText(decisionType)}`);
 
     renderWorkspace(state.activeClaim);
     renderClaimsTable();
-    showToast('Decision Saved', `Claim ${state.activeClaim.claim_id} updated to ${decisionType}`, 'success');
+    renderDashboardRecentTable();
+    showToast('Action Saved', `Claim ${state.activeClaim.claim_id} updated to ${formatRecText(decisionType)}`, 'success');
 }
 
 function askAssistant(queryText) {
@@ -525,14 +633,14 @@ function handleAssistantSubmit() {
 
     input.value = '';
 
-    let answer = `Regarding "${val}": Claim ${state.activeClaim.claim_id} recommendation is ${state.activeClaim.recommendation}.`;
-    if (val.includes('flagged') || val.includes('contradiction')) {
+    let answer = `Regarding "${val}": Claim ${state.activeClaim.claim_id} suggested next step is ${formatRecText(state.activeClaim.recommendation)}.`;
+    if (val.includes('flagged') || val.includes('match') || val.includes('contradiction')) {
         const cList = state.activeClaim.contradictions || [];
-        answer = cList.length > 0 ? `Flagged due to ${cList.length} contradiction(s): ${cList.map(c => c.description).join('; ')}` : "No material factual contradictions detected in submitted documents.";
+        answer = cList.length > 0 ? `Flagged due to ${cList.length} information mismatch(es): ${cList.map(c => c.description).join('; ')}` : "No information mismatches detected across submitted documents.";
     } else if (val.includes('clause') || val.includes('policy')) {
-        answer = `Evaluated against policy: ${state.activeClaim.policy_assessments?.map(pa => `${pa.clause_id} (${pa.classification})`).join(', ')}`;
+        answer = `Evaluated against relevant policy: ${state.activeClaim.policy_assessments?.map(pa => `${pa.clause_id} (${pa.classification})`).join(', ')}`;
     } else if (val.includes('missing')) {
-        answer = `Missing mandatory documents: ${state.activeClaim.completeness?.missing_documents?.join(', ') || 'None (all required docs submitted)'}`;
+        answer = `Missing required documents: ${state.activeClaim.completeness?.missing_documents?.join(', ') || 'None (all required documents submitted)'}`;
     }
 
     showToast('ClaimProof Assistant', answer, 'info');
@@ -561,7 +669,7 @@ function hideProcessingModal() {
 
 function openDocumentDrawer(filename, text) {
     document.getElementById('drawer-doc-filename').innerText = filename;
-    document.getElementById('drawer-doc-content').innerText = text || "PyMuPDF document text layer content loaded.";
+    document.getElementById('drawer-doc-content').innerText = text || "Document text layer content loaded.";
     document.getElementById('drawer-document').classList.remove('hidden');
 }
 
@@ -569,9 +677,9 @@ function openEvidenceDrawer(item) {
     const body = document.getElementById('drawer-evidence-body');
     body.innerHTML = `
         <div class="fact-item mt-8"><span class="fact-label">Field Name</span><strong class="fact-val">${item.field_name}</strong></div>
-        <div class="fact-item mt-8"><span class="fact-label">Extracted Value</span><strong class="fact-val" style="color:#4f46e5;">${item.value}</strong></div>
+        <div class="fact-item mt-8"><span class="fact-label">Extracted Value</span><strong class="fact-val" style="color:#5B6CFF;">${item.value}</strong></div>
         <div class="fact-item mt-8"><span class="fact-label">Source Document</span><strong class="fact-val">${item.source_document} (Page ${item.page_number})</strong></div>
-        <div class="fact-item mt-8"><span class="fact-label">Confidence Score</span><strong class="fact-val">${(item.confidence * 100).toFixed(0)}%</strong></div>
+        <div class="fact-item mt-8"><span class="fact-label">Certainty Score</span><strong class="fact-val">${(item.confidence * 100).toFixed(0)}% certain</strong></div>
         <div class="doc-text-content mt-12">Raw Text Snippet:\n"${item.raw_text || item.value}"</div>
     `;
     document.getElementById('drawer-evidence').classList.remove('hidden');
@@ -584,7 +692,7 @@ function openPolicyDrawer(pa) {
         <span class="badge-pill info">Page ${pa.page}</span>
         <span class="status-chip ${getBadgeClass(pa.classification)}">${pa.classification}</span>
         <div class="doc-text-content mt-12">"${pa.clause_text}"</div>
-        <div class="mt-16"><strong>Investigator Grounding:</strong><p style="font-size:0.85rem; color:#64748b; margin-top:4px;">${pa.reasoning}</p></div>
+        <div class="mt-16"><strong>Why this clause applies:</strong><p style="font-size:13px; color:#CBD5E1; margin-top:4px;">${pa.reasoning}</p></div>
     `;
     document.getElementById('drawer-policy').classList.remove('hidden');
 }
@@ -612,17 +720,17 @@ function handleCmdSearch(query) {
 
     const items = [
         { title: 'Case 1: Standard Accident (APPROVE)', action: () => runDemoClaimFromModal('claim_001_approve') },
-        { title: 'Case 2: Missing Driving Licence (REQ INFO)', action: () => runDemoClaimFromModal('claim_002_request_information') },
+        { title: 'Case 2: Missing Driving Licence (NEED MORE INFO)', action: () => runDemoClaimFromModal('claim_002_request_information') },
         { title: 'Case 3: Date Contradiction (ESCALATE)', action: () => runDemoClaimFromModal('claim_003_escalate') },
         { title: 'Case 4: Commercial Ride-share Use (REJECT)', action: () => runDemoClaimFromModal('claim_004_reject') },
         { title: 'Open Policy Library', action: () => { toggleCommandPalette(); navigateTo('policies'); } },
-        { title: 'View Audit History Log', action: () => { toggleCommandPalette(); navigateTo('history'); } }
+        { title: 'View Activity History Log', action: () => { toggleCommandPalette(); navigateTo('history'); } }
     ];
 
     items.filter(i => i.title.toLowerCase().includes(q)).forEach(item => {
         const div = document.createElement('div');
         div.className = 'cmd-item';
-        div.innerHTML = `<span>${item.title}</span><span style="font-size:0.75rem; color:#94a3b8;">Execute</span>`;
+        div.innerHTML = `<span>${item.title}</span><span style="font-size:12px; color:#94A3B8;">Execute</span>`;
         div.onclick = item.action;
         list.appendChild(div);
     });
@@ -642,11 +750,18 @@ function closeAllOverlays() {
 /* UTILITY HELPERS                            */
 /* ========================================== */
 
+function formatRecText(status) {
+    if (!status) return 'APPROVE';
+    const s = status.toUpperCase();
+    if (s === 'REQUEST_INFORMATION' || s === 'REQ_INFO') return 'REQUEST INFORMATION';
+    return s.replace('_', ' ');
+}
+
 function getBadgeClass(status) {
     if (!status) return 'info';
     const s = status.toUpperCase();
     if (s === 'APPROVE' || s === 'SUPPORTED' || s === 'COMPLETE') return 'approve';
-    if (s === 'REQUEST_INFORMATION' || s === 'WARNING') return 'request';
+    if (s === 'REQUEST_INFORMATION' || s === 'REQ_INFO' || s === 'WARNING') return 'request';
     if (s === 'ESCALATE' || s === 'UNCERTAIN') return 'escalate';
     if (s === 'REJECT' || s === 'BLOCKED' || s === 'MISSING') return 'reject';
     return 'info';
@@ -665,7 +780,7 @@ function showToast(title, message, type = 'info') {
     const toast = document.createElement('div');
     toast.className = 'toast-item';
     toast.innerHTML = `
-        <span style="font-weight:700;">${type === 'success' ? '✓' : type === 'warning' ? '⚠️' : 'ℹ️'} ${title}:</span>
+        <span style="font-weight:bold;">${type === 'success' ? '✓' : type === 'warning' ? '⚠️' : 'ℹ️'} ${title}:</span>
         <span>${message}</span>
     `;
     container.appendChild(toast);
