@@ -221,10 +221,12 @@ def process_claim_folder(claim_id: str, folder_path: str) -> ClaimReview:
     return review
 
 
+from fastapi.responses import HTMLResponse, JSONResponse, FileResponse
+
 # HTTP Routes
-@router.get("/", response_class=HTMLResponse)
-async def serve_dashboard(request: Request):
-    return templates.TemplateResponse("index.html", {"request": request})
+@router.get("/", response_class=FileResponse)
+async def serve_dashboard():
+    return FileResponse("templates/index.html")
 
 
 @router.get("/health")
