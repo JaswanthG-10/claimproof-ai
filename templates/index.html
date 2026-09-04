@@ -55,7 +55,7 @@
             <div class="sidebar-header">
                 <div class="sidebar-brand">
                     <div class="brand-logo-icon">
-                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3">
                             <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
                             <path d="m9 12 2 2 4-4"/>
                         </svg>
@@ -231,27 +231,27 @@
                     <!-- PRIORITY ANCHOR CARD: "MORE INFORMATION NEEDED" -->
                     <div class="priority-claim-card mt-32" id="home-active-claim-card">
                         <div class="banner-left">
-                            <div class="badge-status request mb-12">
-                                <span class="badge-icon-symbol">!</span>
-                                <span>MORE INFORMATION NEEDED</span>
+                            <div class="badge-status request mb-12" id="home-claim-badge">
+                                <span class="badge-icon-symbol" id="home-claim-badge-icon">!</span>
+                                <span id="home-claim-badge-text">MORE INFORMATION NEEDED</span>
                             </div>
-                            <h3 class="card-title-elevated">Current Claim: CLM-CUSTOM-001</h3>
-                            <p class="card-subtitle-elevated mt-4">Motor Accident Claim · Vehicle TN00DM2026</p>
+                            <h3 class="card-title-elevated" id="home-claim-title">Current Claim: CLM-CUSTOM-001</h3>
+                            <p class="card-subtitle-elevated mt-4" id="home-claim-sub">Motor Accident Claim · Vehicle TN00DM2026</p>
                             
                             <div class="readiness-progress-box mt-16">
                                 <div class="progress-info-row">
                                     <span class="readiness-label">Claim Readiness</span>
-                                    <span class="readiness-value">3 of 4 required documents available</span>
+                                    <span class="readiness-value" id="home-readiness-val">3 of 4 required documents available</span>
                                 </div>
                                 <div class="progress-bar-track mt-8">
-                                    <div class="progress-bar-fill warning-fill" style="width: 75%;"></div>
+                                    <div class="progress-bar-fill warning-fill" id="home-readiness-bar" style="width: 75%;"></div>
                                 </div>
-                                <span class="missing-flag-text mt-8">! Missing: Driving Licence</span>
+                                <span class="missing-flag-text mt-8" id="home-missing-flag">! Missing: Driving Licence</span>
                             </div>
                         </div>
 
                         <div class="banner-right">
-                            <button class="btn-primary" onclick="openClaimWorkspace('CLM-CUSTOM-001')">
+                            <button class="btn-primary" id="home-continue-claim-btn" onclick="openClaimWorkspace('CLM-CUSTOM-001')">
                                 <span>Continue Claim →</span>
                             </button>
                         </div>
@@ -267,7 +267,7 @@
                             <span class="qa-sub">File accident or theft report</span>
                         </button>
 
-                        <button class="quick-action-card qa-tint-info" onclick="openStartClaimModal()">
+                        <button class="quick-action-card qa-tint-info" onclick="openUploadDocumentModal()">
                             <div class="qa-icon-box">
                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
                             </div>
@@ -545,7 +545,7 @@
 
                                 <!-- CUSTOMER ACTION BUTTONS -->
                                 <div class="rec-actions-box">
-                                    <button class="btn-primary full-width mb-8" onclick="openStartClaimModal()">Upload Missing Document</button>
+                                    <button class="btn-primary full-width mb-8" onclick="openUploadDocumentModal('driving_licence')">Upload Missing Document</button>
                                     <button class="btn-secondary full-width mb-8" onclick="openStartClaimModal()">Update Claim Details</button>
                                     <button class="btn-tertiary-link full-width" onclick="navigateTo('policies')">View Policy Requirement</button>
                                 </div>
@@ -586,7 +586,7 @@
                                 <h3 class="card-title">My Documents</h3>
                                 <span class="card-subtitle">Manage documents used for your insurance claims</span>
                             </div>
-                            <button class="btn-primary" onclick="openStartClaimModal()">Upload Document</button>
+                            <button class="btn-primary" onclick="openUploadDocumentModal()">Upload Document</button>
                         </div>
 
                         <div class="table-container mt-16">
@@ -638,7 +638,7 @@
                                     <p class="body-text mt-4">Clause 5.1 — Driver Qualification & Licence Requirements</p>
                                 </div>
                                 <div class="mt-16">
-                                    <button class="btn-primary" onclick="openStartClaimModal()">Upload Driving Licence</button>
+                                    <button class="btn-primary" onclick="openUploadDocumentModal('driving_licence')">Upload Driving Licence</button>
                                 </div>
                             </div>
                         </div>
@@ -853,16 +853,18 @@
                 <div id="view-settings" class="content-view hidden">
                     <div class="card-enterprise max-w-720">
                         <h3 class="card-title">Settings</h3>
-                        <span class="card-subtitle">Manage your personal profile and account preferences</span>
+                        <span class="card-subtitle">Manage your personal profile, notification preferences, and account</span>
 
                         <div class="settings-tabs mt-16">
-                            <button class="tab-item active">Profile</button>
-                            <button class="tab-item">Notifications</button>
-                            <button class="tab-item">Privacy & Security</button>
+                            <button class="tab-item active" id="tab-btn-profile" onclick="switchSettingsTab('profile', this)">Profile</button>
+                            <button class="tab-item" id="tab-btn-notifications" onclick="switchSettingsTab('notifications', this)">Notification Preferences</button>
+                            <button class="tab-item" id="tab-btn-security" onclick="switchSettingsTab('security', this)">Privacy & Security</button>
                         </div>
 
-                        <div class="settings-form-body mt-20">
+                        <!-- TAB 1: PROFILE -->
+                        <div id="settings-panel-profile" class="settings-form-body mt-20">
                             <h4 class="section-heading">Personal Information</h4>
+                            <p class="body-text mt-4">Update your contact details linked to your motor insurance policy.</p>
                             
                             <div class="field-group mt-16">
                                 <label class="field-label">Full Name</label>
@@ -879,11 +881,95 @@
                                 <input type="text" id="settings-phone-input" class="input-field" value="+91 98765 43210">
                             </div>
 
+                            <div class="field-group mt-16">
+                                <label class="field-label">Active Policy Reference</label>
+                                <input type="text" id="settings-policy-input" class="input-field" value="POL-2026-104 (Comprehensive Motor Insurance)" readonly style="opacity:0.75; cursor:not-allowed;">
+                            </div>
+
                             <div class="form-actions-right mt-24">
                                 <button class="btn-secondary" onclick="navigateTo('dashboard')">Cancel</button>
-                                <button class="btn-primary" onclick="saveSettingsProfile()">Save Changes</button>
+                                <button id="btn-save-profile" class="btn-primary" onclick="saveSettingsProfile()">
+                                    <span id="btn-save-profile-label">Save Changes</span>
+                                </button>
                             </div>
                         </div>
+
+                        <!-- TAB 2: NOTIFICATION PREFERENCES -->
+                        <div id="settings-panel-notifications" class="settings-form-body mt-20 hidden">
+                            <h4 class="section-heading">Notification Preferences</h4>
+                            <p class="body-text mt-4">Control real-time alerts for claim readiness checks, missing evidence, and policy updates.</p>
+
+                            <div class="toggles-stack mt-20">
+                                <!-- TOGGLE 1 -->
+                                <div class="toggle-card">
+                                    <div class="toggle-info">
+                                        <strong class="toggle-title">Claim Needs More Info</strong>
+                                        <span class="toggle-desc">Alert me immediately when additional documents, clarifications, or missing evidence are required.</span>
+                                    </div>
+                                    <label class="switch">
+                                        <input type="checkbox" id="notif-needs-info" checked>
+                                        <span class="slider round"></span>
+                                    </label>
+                                </div>
+
+                                <!-- TOGGLE 2 -->
+                                <div class="toggle-card mt-12">
+                                    <div class="toggle-info">
+                                        <strong class="toggle-title">AI Check Completes</strong>
+                                        <span class="toggle-desc">Notify me as soon as an automated document review or claim readiness analysis is completed.</span>
+                                    </div>
+                                    <label class="switch">
+                                        <input type="checkbox" id="notif-ai-check" checked>
+                                        <span class="slider round"></span>
+                                    </label>
+                                </div>
+
+                                <!-- TOGGLE 3 -->
+                                <div class="toggle-card mt-12">
+                                    <div class="toggle-info">
+                                        <strong class="toggle-title">Policy Updates</strong>
+                                        <span class="toggle-desc">Inform me when policy terms, coverage renewals, or clause interpretations are updated.</span>
+                                    </div>
+                                    <label class="switch">
+                                        <input type="checkbox" id="notif-policy-updates" checked>
+                                        <span class="slider round"></span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="form-actions-right mt-24">
+                                <button class="btn-secondary" onclick="navigateTo('dashboard')">Cancel</button>
+                                <button id="btn-save-notifications" class="btn-primary" onclick="saveNotificationPreferences()">
+                                    <span id="btn-save-notif-label">Save Preferences</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- TAB 3: PRIVACY & SECURITY -->
+                        <div id="settings-panel-security" class="settings-form-body mt-20 hidden">
+                            <h4 class="section-heading">Privacy & Data Protection</h4>
+                            <p class="body-text mt-4">ClaimProof AI protects your claim documents and evidence with zero unencrypted sharing.</p>
+
+                            <div class="security-card mt-16">
+                                <div class="security-row">
+                                    <span class="sec-label">Data Encryption:</span>
+                                    <span class="status-badge approve"><span class="badge-icon-symbol">✓</span> Active AES-256</span>
+                                </div>
+                                <div class="security-row mt-12">
+                                    <span class="sec-label">Current Session:</span>
+                                    <span class="body-text">Verified Secure Web Client (Windows)</span>
+                                </div>
+                                <div class="security-row mt-12">
+                                    <span class="sec-label">Regulatory Compliance:</span>
+                                    <span class="body-text">Insurance Evidence Integrity & Non-Tamper Protection</span>
+                                </div>
+                            </div>
+
+                            <div class="form-actions-right mt-24">
+                                <button class="btn-secondary" onclick="navigateTo('dashboard')">Back to Dashboard</button>
+                            </div>
+                        </div>
+
                     </div>
                 </div>
 
@@ -966,10 +1052,10 @@
                         <input type="file" id="modal-files" class="input-file hidden" multiple>
                     </div>
                     <div class="demo-try-section mt-16">
-                        <span class="demo-try-label">OR SELECT DEMO CASE</span>
+                        <span class="demo-try-label">OR TRY A SAMPLE CLAIM</span>
                         <div class="demo-try-buttons">
-                            <button class="btn-demo-pill approve" onclick="runDemoClaimFromModal('claim_001_approve')">Case 1: Standard Accident</button>
-                            <button class="btn-demo-pill request" onclick="runDemoClaimFromModal('claim_002_request_information')">Case 2: Missing DL</button>
+                            <button class="btn-demo-pill approve" onclick="runDemoClaimFromModal('claim_001_approve')">Sample 1: Standard Accident</button>
+                            <button class="btn-demo-pill request" onclick="runDemoClaimFromModal('claim_002_request_information')">Sample 2: Missing DL</button>
                         </div>
                     </div>
                     <div class="form-actions-right mt-24">
@@ -977,6 +1063,120 @@
                         <button class="btn-primary" onclick="submitNewClaimForm()">Run AI Claim Check →</button>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- DEDICATED UPLOAD DOCUMENT MODAL            -->
+    <!-- ========================================== -->
+    <div id="modal-upload-document" class="modal-overlay hidden">
+        <div class="modal-card-ent max-w-540">
+            <div class="modal-header">
+                <div>
+                    <h3 class="card-title-elevated">Upload Claim Document</h3>
+                    <span class="card-subtitle">Add required evidence to verify your insurance claim</span>
+                </div>
+                <button class="modal-close-btn" onclick="closeUploadDocumentModal()">✕</button>
+            </div>
+
+            <div class="modal-body">
+                <!-- TARGET CLAIM INFO -->
+                <div class="target-claim-pill mb-16">
+                    <span class="claim-label">TARGET CLAIM:</span>
+                    <strong id="upload-modal-claim-id">CLM-CUSTOM-001</strong>
+                    <span class="badge-neutral" id="upload-modal-claim-type">Accident Claim</span>
+                </div>
+
+                <!-- DOCUMENT TYPE SELECT -->
+                <div class="field-group mb-16">
+                    <label class="field-label">Document Type</label>
+                    <select id="upload-doc-type-select" class="input-field select-field" onchange="handleDocTypeChange()">
+                        <option value="driving_licence">Driving Licence (Mandatory)</option>
+                        <option value="registration_certificate">Registration Certificate (RC)</option>
+                        <option value="repair_estimate">Repair Estimate / Invoice</option>
+                        <option value="police_fir">Police First Information Report (FIR)</option>
+                        <option value="claim_form">Signed Claim Form</option>
+                        <option value="other">Other Supporting Document</option>
+                    </select>
+                </div>
+
+                <!-- IDLE STATE: DROPZONE & FILE INPUT -->
+                <div id="upload-state-idle" class="upload-zone-wrapper">
+                    <div class="upload-zone" id="upload-doc-dropzone" onclick="document.getElementById('upload-doc-file-input').click()">
+                        <div class="zone-icon">📄</div>
+                        <h4>Choose a file or drag & drop here</h4>
+                        <p>Supports PDF, PNG, JPG, or TXT up to 15MB</p>
+                        <button type="button" class="btn-secondary mt-12" onclick="event.stopPropagation(); document.getElementById('upload-doc-file-input').click()">Browse Files</button>
+                        <input type="file" id="upload-doc-file-input" class="input-file hidden" accept=".pdf,.txt,.png,.jpg,.jpeg">
+                    </div>
+
+                    <!-- SELECTED FILE PREVIEW -->
+                    <div id="upload-selected-file-preview" class="selected-file-banner hidden mt-12">
+                        <div class="file-icon-badge">📎</div>
+                        <div class="file-meta">
+                            <strong id="upload-file-name">driving_licence.pdf</strong>
+                            <span id="upload-file-size">1.2 MB</span>
+                        </div>
+                        <button class="btn-icon-clear" onclick="clearSelectedUploadFile()" title="Remove file">✕</button>
+                    </div>
+
+                    <div class="form-actions-right mt-24">
+                        <button class="btn-secondary" onclick="closeUploadDocumentModal()">Cancel</button>
+                        <button id="btn-start-upload" class="btn-primary" onclick="startDocumentUploadProcess()">
+                            <span>Upload & Check Document</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- UPLOADING PROGRESS STATE -->
+                <div id="upload-state-progress" class="upload-progress-card hidden">
+                    <div class="spinner-large"></div>
+                    <h4 id="upload-progress-headline" class="mt-16">Uploading & Verifying Document...</h4>
+                    <p id="upload-progress-sub" class="metadata-text mt-4">Extracting text and comparing with policy rules</p>
+                    
+                    <div class="upload-progress-bar-container mt-16">
+                        <div class="progress-bar-track">
+                            <div id="upload-progress-bar-fill" class="progress-bar-fill" style="width: 35%;"></div>
+                        </div>
+                        <span id="upload-progress-percent" class="field-label mt-6 text-right">35%</span>
+                    </div>
+
+                    <div class="upload-stepper-mini mt-16">
+                        <div class="mini-step complete" id="ustep-1">✓ File transferred</div>
+                        <div class="mini-step active" id="ustep-2">● Extracting text & metadata</div>
+                        <div class="mini-step pending" id="ustep-3">○ Validating against Policy Clause</div>
+                        <div class="mini-step pending" id="ustep-4">○ Updating claim readiness</div>
+                    </div>
+                </div>
+
+                <!-- SUCCESS STATE -->
+                <div id="upload-state-success" class="upload-result-card success hidden">
+                    <div class="result-icon-circle success">✓</div>
+                    <h3 class="mt-12">Document Verified & Added!</h3>
+                    <p id="upload-success-message" class="body-text mt-6">
+                        Document has been verified. Your claim readiness is now <strong>100% Ready for Submission</strong>.
+                    </p>
+                    <div class="readiness-pill-summary mt-16">
+                        <span class="badge-status approve"><span class="badge-icon-symbol">✓</span> 4 of 4 Documents Available</span>
+                    </div>
+                    <div class="form-actions-right mt-24">
+                        <button class="btn-secondary" onclick="closeUploadDocumentModal(); navigateTo('documents');">View in Documents</button>
+                        <button class="btn-primary" onclick="closeUploadDocumentModal(); navigateTo('workspace');">View Claim Workspace →</button>
+                    </div>
+                </div>
+
+                <!-- ERROR STATE -->
+                <div id="upload-state-error" class="upload-result-card error hidden">
+                    <div class="result-icon-circle error">✕</div>
+                    <h3 class="mt-12">Upload Failed</h3>
+                    <p id="upload-error-message" class="body-text mt-6">The document could not be verified. Please check the file and try again.</p>
+                    <div class="form-actions-right mt-24">
+                        <button class="btn-secondary" onclick="closeUploadDocumentModal()">Cancel</button>
+                        <button class="btn-primary" onclick="resetUploadModalToIdle()">Try Again</button>
+                    </div>
+                </div>
+
             </div>
         </div>
     </div>
