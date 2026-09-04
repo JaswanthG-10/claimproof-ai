@@ -1,5 +1,5 @@
 // ==========================================
-// CLAIMPROOF AI - CUSTOMER APP CONTROLLER & SPA
+// CLAIMPROOF AI - CUSTOMER SAAS CONTROLLER
 // ==========================================
 
 const state = {
@@ -14,13 +14,16 @@ const state = {
     policyNumber: 'POL-2026-104',
     policyFilter: 'all',
     claimStep: 1,
-    selectedType: 'accident'
+    selectedType: 'accident',
+    isTransitioning: false
 };
 
 // Initial Setup
 document.addEventListener('DOMContentLoaded', () => {
+    initCinematicLoginScene();
     initApp();
     setupEventListeners();
+    setupLoginKeypressListener();
     checkHealth();
 });
 
@@ -39,7 +42,7 @@ async function checkHealth() {
 }
 
 function setupEventListeners() {
-    // Sidebar Nav Click Handlers
+    // Sidebar Nav Item Clicks
     document.querySelectorAll('.sidebar-nav .nav-item[data-view]').forEach(item => {
         item.addEventListener('click', (e) => {
             e.preventDefault();
@@ -48,7 +51,7 @@ function setupEventListeners() {
         });
     });
 
-    // Keyboard Command Palette Shortcut (Ctrl+K or Cmd+K)
+    // Keyboard Command Palette (Ctrl+K or Cmd+K)
     document.addEventListener('keydown', (e) => {
         if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
             e.preventDefault();
@@ -58,7 +61,7 @@ function setupEventListeners() {
         }
     });
 
-    // Global Click Handler to close dropdown popups
+    // Click outside profile menu
     document.addEventListener('click', (e) => {
         if (!e.target.closest('#sidebar-profile-btn') && !e.target.closest('#profile-popup-menu')) {
             document.getElementById('profile-popup-menu')?.classList.add('hidden');
@@ -96,6 +99,208 @@ function setupEventListeners() {
 
 
 /* ========================================== */
+/* THREE.JS CINEMATIC LOGIN SCENE             */
+/* ========================================== */
+
+let loginScene, loginCamera, loginRenderer, loginGraphGroup, loginAnimId;
+
+function initCinematicLoginScene() {
+    const canvas = document.getElementById('login-3d-canvas');
+    if (!canvas || typeof THREE === 'undefined') return;
+
+    const width = window.innerWidth;
+    const height = window.innerHeight;
+
+    loginScene = new THREE.Scene();
+    loginScene.fog = new THREE.FogExp2(0x080E19, 0.03);
+
+    loginCamera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000);
+    loginCamera.position.z = 26;
+
+    loginRenderer = new THREE.WebGLRenderer({ canvas: canvas, alpha: true, antialias: true });
+    loginRenderer.setSize(width, height);
+    loginRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+    loginGraphGroup = new THREE.Group();
+    loginScene.add(loginGraphGroup);
+
+    // Connected Network Nodes: Documents -> Evidence -> Policy -> Recommendation
+    const nodeStages = [
+        { x: -10, color: 0x38BDF8, count: 5 }, // Documents (#38BDF8)
+        { x: -3, color: 0x2563EB, count: 6 },  // Evidence (#2563EB)
+        { x: 4, color: 0x38BDF8, count: 5 },   // Policy (#38BDF8)
+        { x: 10, color: 0x2563EB, count: 4 }   // Recommendation (#2563EB)
+    ];
+
+    const nodePositions = [];
+    const sphereGeo = new THREE.SphereGeometry(0.35, 16, 16);
+
+    nodeStages.forEach(stage => {
+        const stageNodes = [];
+        for (let i = 0; i < stage.count; i++) {
+            const y = (i - (stage.count - 1) / 2) * 2.8 + (Math.random() - 0.5) * 0.5;
+            const z = (Math.random() - 0.5) * 3;
+
+            const mat = new THREE.MeshBasicMaterial({
+                color: stage.color,
+                transparent: true,
+                opacity: 0.75
+            });
+            const mesh = new THREE.Mesh(sphereGeo, mat);
+            mesh.position.set(stage.x, y, z);
+            loginGraphGroup.add(mesh);
+
+            // Subtle outer halo
+            const haloGeo = new THREE.SphereGeometry(0.65, 12, 12);
+            const haloMat = new THREE.MeshBasicMaterial({
+                color: stage.color,
+                transparent: true,
+                opacity: 0.15,
+                wireframe: true
+            });
+            const halo = new THREE.Mesh(haloGeo, haloMat);
+            halo.position.set(stage.x, y, z);
+            loginGraphGroup.add(halo);
+
+            stageNodes.push({ x: stage.x, y, z });
+        }
+        nodePositions.push(stageNodes);
+    });
+
+    // Connecting lines between stages
+    const lineMat = new THREE.LineBasicMaterial({
+        color: 0x2563EB,
+        transparent: true,
+        opacity: 0.22
+    });
+
+    for (let s = 0; s < nodePositions.length - 1; s++) {
+        const curr = nodePositions[s];
+        const next = nodePositions[s + 1];
+
+        curr.forEach(n1 => {
+            next.forEach(n2 => {
+                if (Math.random() > 0.42) return;
+                const points = [
+                    new THREE.Vector3(n1.x, n1.y, n1.z),
+                    new THREE.Vector3((n1.x + n2.x) / 2, (n1.y + n2.y) / 2 + (Math.random() - 0.5) * 1.5, (n1.z + n2.z) / 2 + (Math.random() - 0.5) * 1.5),
+                    new THREE.Vector3(n2.x, n2.y, n2.z)
+                ];
+                const curve = new THREE.CatmullRomCurve3(points);
+                const geometry = new THREE.BufferGeometry().setFromPoints(curve.getPoints(18));
+                const line = new THREE.Line(geometry, lineMat);
+                loginGraphGroup.add(line);
+            });
+        });
+    }
+
+    // Ambient floating particles
+    const particleCount = 100;
+    const particleGeo = new THREE.BufferGeometry();
+    const posArray = new Float32Array(particleCount * 3);
+    for (let i = 0; i < particleCount * 3; i += 3) {
+        posArray[i] = (Math.random() - 0.5) * 32;
+        posArray[i + 1] = (Math.random() - 0.5) * 20;
+        posArray[i + 2] = (Math.random() - 0.5) * 14;
+    }
+    particleGeo.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+    const particleMat = new THREE.PointsMaterial({
+        size: 0.08,
+        color: 0x38BDF8,
+        transparent: true,
+        opacity: 0.4
+    });
+    loginGraphGroup.add(new THREE.Points(particleGeo, particleMat));
+
+    // Handle Resize
+    window.addEventListener('resize', onLoginWindowResize);
+
+    // Respect prefers-reduced-motion
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (prefersReducedMotion) {
+        loginRenderer.render(loginScene, loginCamera);
+        return;
+    }
+
+    let clock = new THREE.Clock();
+    function animate() {
+        loginAnimId = requestAnimationFrame(animate);
+        const elapsedTime = clock.getElapsedTime();
+
+        // Slow, ambient rotation & drifting
+        loginGraphGroup.rotation.y = elapsedTime * 0.035;
+        loginGraphGroup.rotation.x = Math.sin(elapsedTime * 0.2) * 0.03;
+
+        particleMat.opacity = 0.3 + Math.sin(elapsedTime * 1.2) * 0.15;
+        loginRenderer.render(loginScene, loginCamera);
+    }
+    animate();
+}
+
+function onLoginWindowResize() {
+    if (!loginCamera || !loginRenderer) return;
+    const w = window.innerWidth;
+    const h = window.innerHeight;
+    loginCamera.aspect = w / h;
+    loginCamera.updateProjectionMatrix();
+    loginRenderer.setSize(w, h);
+}
+
+function handleLoginKeyPress(e) {
+    if (e.key === 'Enter') {
+        e.preventDefault();
+        handleWorkspaceEntry();
+    }
+}
+
+function setupLoginKeypressListener() {
+    window.addEventListener('keydown', handleLoginKeyPress);
+}
+
+function removeLoginKeypressListener() {
+    window.removeEventListener('keydown', handleLoginKeyPress);
+}
+
+function handleWorkspaceEntry() {
+    if (state.isTransitioning) return;
+    state.isTransitioning = true;
+
+    removeLoginKeypressListener();
+
+    const welcome = document.getElementById('welcome-screen');
+    const shell = document.getElementById('app-shell');
+    const enterBtn = document.getElementById('enter-workspace-btn');
+
+    if (enterBtn) enterBtn.disabled = true;
+
+    // Short exit transition: scene zooms in slightly + fades to --background (420ms)
+    welcome?.classList.add('fade-zoom-exit');
+
+    setTimeout(() => {
+        welcome?.classList.add('hidden');
+        shell?.classList.remove('hidden');
+        state.isTransitioning = false;
+        navigateTo('dashboard');
+        showToast('Welcome back, Jaswanth', 'Workspace ready for claim readiness review.', 'success');
+    }, 420);
+}
+
+function showWelcomeScreen() {
+    const welcome = document.getElementById('welcome-screen');
+    const shell = document.getElementById('app-shell');
+    const enterBtn = document.getElementById('enter-workspace-btn');
+
+    document.getElementById('profile-popup-menu')?.classList.add('hidden');
+
+    if (enterBtn) enterBtn.disabled = false;
+    welcome?.classList.remove('hidden', 'fade-zoom-exit');
+    shell?.classList.add('hidden');
+
+    setupLoginKeypressListener();
+}
+
+
+/* ========================================== */
 /* SIDEBAR COLLAPSE & PROFILE MENU            */
 /* ========================================== */
 
@@ -127,18 +332,15 @@ function toggleProfileMenu() {
 function navigateTo(viewName) {
     state.currentView = viewName;
 
-    // Hide all content views & display active target
     document.querySelectorAll('.content-view').forEach(el => el.classList.add('hidden'));
     const targetView = document.getElementById(`view-${viewName}`);
     if (targetView) targetView.classList.remove('hidden');
 
-    // Update active nav items
     document.querySelectorAll('.sidebar-nav .nav-item').forEach(el => {
         if (el.getAttribute('data-view') === viewName) el.classList.add('active');
         else el.classList.remove('active');
     });
 
-    // Breadcrumb title map
     const titles = {
         'dashboard': 'Home',
         'my-claims': 'My Claims',
@@ -156,7 +358,6 @@ function navigateTo(viewName) {
         document.getElementById('breadcrumb-current').innerText = titles[viewName];
     }
 
-    // Refresh view data
     if (viewName === 'my-claims') renderClaimsTable();
     else if (viewName === 'documents') renderDocumentsTable();
     else if (viewName === 'policies' || viewName === 'policy-details') renderPolicyLibrary();
@@ -202,7 +403,6 @@ function selectClaimType(type, element) {
 async function submitNewClaimForm() {
     const fileInput = document.getElementById('modal-files');
     if (!fileInput.files || fileInput.files.length === 0) {
-        // Fallback demo claim if no files selected
         runDemoClaimFromModal('claim_001_approve');
         return;
     }
@@ -309,7 +509,7 @@ function renderWorkspace(claim) {
     document.getElementById('ws-incident-badge').innerText = claim.incident_type ? claim.incident_type.charAt(0).toUpperCase() + claim.incident_type.slice(1) : 'Accident';
 
     const statusBadge = document.getElementById('ws-status-badge');
-    statusBadge.innerText = formatRecText(claim.recommendation);
+    statusBadge.innerHTML = `<span class="badge-icon-symbol">${getStatusSymbol(claim.recommendation)}</span> ${formatRecText(claim.recommendation)}`;
     statusBadge.className = `badge-status ${getBadgeClass(claim.recommendation)}`;
 
     // Left Panel: Documents & Evidence (Available vs Missing)
@@ -322,14 +522,14 @@ function renderWorkspace(claim) {
     missingList.innerHTML = '';
     availList.innerHTML = '';
 
-    const availableCount = availableDocs.length + 1; // Including Policy Schedule
+    const availableCount = availableDocs.length + 1;
     document.getElementById('ws-doc-counter').innerText = `${availableCount} of 4 available`;
 
     // Render Available Documents
     const policyRow = document.createElement('div');
     policyRow.className = 'doc-status-row positive';
     policyRow.style.padding = '8px 12px';
-    policyRow.style.background = 'var(--surface-secondary)';
+    policyRow.style.background = 'var(--surface-2)';
     policyRow.style.borderRadius = '6px';
     policyRow.style.marginTop = '6px';
     policyRow.style.fontSize = '13px';
@@ -342,7 +542,7 @@ function renderWorkspace(claim) {
         const div = document.createElement('div');
         div.className = 'doc-status-row positive';
         div.style.padding = '8px 12px';
-        div.style.background = 'var(--surface-secondary)';
+        div.style.background = 'var(--surface-2)';
         div.style.borderRadius = '6px';
         div.style.marginTop = '6px';
         div.style.fontSize = '13px';
@@ -358,8 +558,8 @@ function renderWorkspace(claim) {
             const div = document.createElement('div');
             div.className = 'doc-status-row warning';
             div.style.padding = '8px 12px';
-            div.style.background = 'rgba(251, 191, 36, 0.12)';
-            div.style.border = '1px solid rgba(251, 191, 36, 0.3)';
+            div.style.background = 'rgba(245, 158, 11, 0.12)';
+            div.style.border = '1px solid rgba(245, 158, 11, 0.3)';
             div.style.borderRadius = '6px';
             div.style.marginTop = '6px';
             div.style.fontSize = '13px';
@@ -385,7 +585,7 @@ function renderWorkspace(claim) {
 
     if (contradictions.length > 0) {
         cCard.classList.remove('hidden');
-        document.getElementById('ws-issues-count-badge').innerText = `${contradictions.length} Issue${contradictions.length > 1 ? 's' : ''}`;
+        document.getElementById('ws-issues-count-badge').innerHTML = `<span class="badge-icon-symbol">!</span> ${contradictions.length} Issue${contradictions.length > 1 ? 's' : ''}`;
         cContainer.innerHTML = '';
 
         contradictions.forEach(c => {
@@ -394,7 +594,7 @@ function renderWorkspace(claim) {
             card.innerHTML = `
                 <div class="issue-card-top">
                     <span class="issue-title">! ${c.field_name.replace('_', ' ').toUpperCase()} MISMATCH</span>
-                    <span class="badge-status request">POTENTIAL ISSUE</span>
+                    <span class="badge-status request"><span class="badge-icon-symbol">!</span> POTENTIAL ISSUE</span>
                 </div>
                 <div class="issue-desc">${c.description}</div>
                 <div class="issue-comparison-table">
@@ -432,15 +632,15 @@ function renderWorkspace(claim) {
         recGuidanceEl.innerText = "You can proceed to submit your claim package to your insurer.";
     } else if (recType === 'REQUEST_INFORMATION' || recType === 'REQ_INFO') {
         recSummaryEl.innerText = "Your claim currently appears to meet some policy requirements, but additional information is needed before it is ready.";
-        recExplanationEl.innerHTML = "! Driving Licence missing<br>! Incident Date not provided on Claim Form";
+        recExplanationEl.innerHTML = "• Driving Licence missing<br>• Incident Date not provided on Claim Form";
         recGuidanceEl.innerText = "Upload your driving licence and provide the incident date to make your claim ready.";
     } else if (recType === 'ESCALATE') {
         recSummaryEl.innerText = "A date contradiction was detected across your submitted evidence that requires clarification.";
-        recExplanationEl.innerHTML = "! Incident Date mismatch between Claim Form (Aug 21) and Police FIR (Aug 22)";
-        recGuidanceEl.innerText = "Update your incident date or submit a updated statement to clarify the mismatch.";
+        recExplanationEl.innerHTML = "• Incident Date mismatch between Claim Form (Aug 21) and Police FIR (Aug 22)";
+        recGuidanceEl.innerText = "Update your incident date or submit an updated statement to clarify the mismatch.";
     } else if (recType === 'REJECT') {
         recSummaryEl.innerText = "A potential policy exclusion clause was identified during the automated coverage check.";
-        recExplanationEl.innerHTML = "! Vehicle operated for commercial ride-share taxi use (Exclusion Clause 4.2)";
+        recExplanationEl.innerHTML = "• Vehicle operated for commercial ride-share taxi use (Exclusion Clause 4.2)";
         recGuidanceEl.innerText = "Review exclusion Clause 4.2 or contact customer support for clarification.";
     }
 }
@@ -465,7 +665,7 @@ function renderDashboardRecentTable() {
             <td>${c.incident_type ? c.incident_type.toUpperCase() : 'ACCIDENT'}</td>
             <td>${c.incident_date || 'Not specified'}</td>
             <td>₹${Number(c.claimed_amount || 48750).toLocaleString('en-IN')}</td>
-            <td><span class="status-badge ${getBadgeClass(c.recommendation)}">${formatRecText(c.recommendation)}</span></td>
+            <td><span class="status-badge ${getBadgeClass(c.recommendation)}"><span class="badge-icon-symbol">${getStatusSymbol(c.recommendation)}</span> ${formatRecText(c.recommendation)}</span></td>
             <td><button class="btn-tertiary-link">Continue →</button></td>
         `;
         tbody.appendChild(tr);
@@ -485,7 +685,7 @@ function renderClaimsTable() {
             <td>${c.vehicle_number}</td>
             <td>${c.incident_date || 'Not specified'}</td>
             <td>₹${Number(c.claimed_amount || 48750).toLocaleString('en-IN')}</td>
-            <td><span class="status-badge ${getBadgeClass(c.recommendation)}">${formatRecText(c.recommendation)}</span></td>
+            <td><span class="status-badge ${getBadgeClass(c.recommendation)}"><span class="badge-icon-symbol">${getStatusSymbol(c.recommendation)}</span> ${formatRecText(c.recommendation)}</span></td>
             <td>${c.completeness?.missing_documents?.length > 0 ? `${4 - c.completeness.missing_documents.length}/4 Docs` : '4/4 Docs Ready'}</td>
             <td><button class="btn-tertiary-link" onclick="openClaimWorkspace('${c.claim_id}')">Continue</button></td>
         `;
@@ -522,7 +722,7 @@ function renderDocumentsTable() {
             <td><span class="badge-neutral">${doc.type}</span></td>
             <td>${doc.claimId}</td>
             <td>${doc.date}</td>
-            <td><span class="status-badge approve">✓ ${doc.status}</span></td>
+            <td><span class="status-badge approve"><span class="badge-icon-symbol">✓</span> ${doc.status}</span></td>
             <td>
                 <button class="btn-tertiary-link" onclick="openDocumentDrawer('${doc.name}', 'Document preview content.')">View</button>
             </td>
@@ -629,7 +829,7 @@ function openPolicyDrawer(pa) {
     const body = document.getElementById('drawer-policy-body');
     body.innerHTML = `
         <span class="badge-neutral">Page ${pa.page}</span>
-        <span class="status-badge ${getBadgeClass(pa.classification)}">${pa.classification}</span>
+        <span class="status-badge ${getBadgeClass(pa.classification)}"><span class="badge-icon-symbol">${getStatusSymbol(pa.classification)}</span> ${pa.classification}</span>
         <p class="body-text mt-12">"${pa.clause_text}"</p>
         <div class="mt-16"><strong>Policy Rule Application:</strong><p class="body-text mt-4">${pa.reasoning}</p></div>
     `;
@@ -666,7 +866,7 @@ function handleCmdSearch(query) {
         const div = document.createElement('div');
         div.style.padding = '10px 14px';
         div.style.cursor = 'pointer';
-        div.style.borderBottom = '1px solid var(--border-soft)';
+        div.style.borderBottom = '1px solid var(--border)';
         div.innerHTML = `<span class="important-value">${item.title}</span>`;
         div.onclick = item.action;
         list.appendChild(div);
@@ -695,10 +895,19 @@ function formatRecText(status) {
     return 'READY FOR SUBMISSION';
 }
 
+function getStatusSymbol(status) {
+    if (!status) return '✓';
+    const s = status.toUpperCase();
+    if (s === 'APPROVE' || s === 'READY' || s === 'SUPPORTED' || s === 'COMPLETE') return '✓';
+    if (s === 'REQUEST_INFORMATION' || s === 'REQ_INFO' || s === 'WARNING' || s === 'ESCALATE') return '!';
+    if (s === 'REJECT' || s === 'BLOCKED' || s === 'MISSING') return '✕';
+    return '✓';
+}
+
 function getBadgeClass(status) {
     if (!status) return 'approve';
     const s = status.toUpperCase();
-    if (s === 'APPROVE' || s === 'SUPPORTED' || s === 'COMPLETE') return 'approve';
+    if (s === 'APPROVE' || s === 'READY' || s === 'SUPPORTED' || s === 'COMPLETE') return 'approve';
     if (s === 'REQUEST_INFORMATION' || s === 'REQ_INFO' || s === 'WARNING') return 'request';
     if (s === 'ESCALATE' || s === 'UNCERTAIN') return 'escalate';
     if (s === 'REJECT' || s === 'BLOCKED' || s === 'MISSING') return 'reject';
@@ -718,8 +927,8 @@ function showToast(title, message, type = 'info') {
     const toast = document.createElement('div');
     toast.className = 'toast-item';
     toast.innerHTML = `
-        <span style="font-weight:600;">${type === 'success' ? '✓' : type === 'warning' ? '!' : 'ℹ'} ${title}:</span>
-        <span>${message}</span>
+        <span style="font-weight:600; color:${type === 'success' ? 'var(--success)' : type === 'warning' ? 'var(--warning)' : 'var(--info)'};">${type === 'success' ? '✓' : type === 'warning' ? '!' : 'ℹ'} ${title}:</span>
+        <span style="color:var(--text-secondary);">${message}</span>
     `;
     container.appendChild(toast);
     setTimeout(() => {

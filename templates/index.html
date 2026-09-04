@@ -8,14 +8,47 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Three.js for Cinematic 3D Ambient Scene -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
 
     <!-- ========================================== -->
+    <!-- CINEMATIC 3D MOTION LOGIN ENTRY PAGE       -->
+    <!-- ========================================== -->
+    <div id="welcome-screen" class="cinematic-login-screen">
+        <canvas id="login-3d-canvas"></canvas>
+        <div class="login-center-content">
+            <div class="login-brand-shield">
+                <div class="shield-logo-box">
+                    <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                        <path d="m9 12 2 2 4-4"/>
+                    </svg>
+                </div>
+                <h1 class="login-brand-title">ClaimProof AI</h1>
+            </div>
+            <p class="login-brand-tagline">AI-powered evidence review for motor insurance claims</p>
+            
+            <div class="login-action-area mt-32">
+                <button id="enter-workspace-btn" class="btn-primary btn-enter-workspace" onclick="handleWorkspaceEntry()">
+                    <span>Enter Workspace</span>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                        <line x1="5" y1="12" x2="19" y2="12"/>
+                        <polyline points="12 5 19 12 12 19"/>
+                    </svg>
+                </button>
+                <span class="enter-key-hint mt-12">Press Enter ↵ to continue</span>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- ========================================== -->
     <!-- GLOBAL APPLICATION SHELL                    -->
     <!-- ========================================== -->
-    <div id="app-shell" class="app-shell">
+    <div id="app-shell" class="app-shell hidden">
 
         <!-- COLLAPSIBLE SIDEBAR (248px Expanded / 72px Collapsed) -->
         <aside id="sidebar" class="sidebar">
@@ -131,7 +164,7 @@
                     <button class="popup-item" onclick="navigateTo('settings')">My Profile</button>
                     <button class="popup-item" onclick="navigateTo('settings')">Settings</button>
                     <div class="popup-divider"></div>
-                    <button class="popup-item danger" onclick="showToast('Signed Out', 'You have signed out of your account.', 'info')">Sign Out</button>
+                    <button class="popup-item danger" onclick="showWelcomeScreen()">Sign Out</button>
                 </div>
             </div>
         </aside>
@@ -181,25 +214,29 @@
                 <!-- ========================================== -->
                 <div id="view-dashboard" class="content-view">
                     
+                    <!-- HERO BANNER WITH SUBTLE GRADIENT & RESTRAINED CORNER PRIMARY GLOW -->
                     <div class="dashboard-hero-panel">
                         <div class="hero-text-area">
                             <h2 class="hero-heading">Welcome back, Jaswanth</h2>
                             <p class="hero-body">Check your claim readiness, upload documents and track your insurance claim.</p>
                         </div>
                         <div class="hero-action-area">
-                            <button class="btn-primary" onclick="openStartClaimModal()">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+                            <button class="btn-primary btn-hero-cta" onclick="openStartClaimModal()">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
                                 <span>Start New Claim</span>
                             </button>
                         </div>
                     </div>
 
-                    <!-- CURRENT ACTIVE CLAIM CARD -->
-                    <div class="card-enterprise mt-24 active-claim-banner" id="home-active-claim-card">
+                    <!-- PRIORITY ANCHOR CARD: "MORE INFORMATION NEEDED" -->
+                    <div class="priority-claim-card mt-32" id="home-active-claim-card">
                         <div class="banner-left">
-                            <div class="badge-status request mb-8">MORE INFORMATION NEEDED</div>
-                            <h3 class="card-title">Current Claim: CLM-CUSTOM-001</h3>
-                            <p class="card-subtitle mt-4">Motor Accident Claim · Vehicle TN00DM2026</p>
+                            <div class="badge-status request mb-12">
+                                <span class="badge-icon-symbol">!</span>
+                                <span>MORE INFORMATION NEEDED</span>
+                            </div>
+                            <h3 class="card-title-elevated">Current Claim: CLM-CUSTOM-001</h3>
+                            <p class="card-subtitle-elevated mt-4">Motor Accident Claim · Vehicle TN00DM2026</p>
                             
                             <div class="readiness-progress-box mt-16">
                                 <div class="progress-info-row">
@@ -220,9 +257,9 @@
                         </div>
                     </div>
 
-                    <!-- QUICK ACTIONS ROW -->
-                    <div class="quick-actions-row mt-24">
-                        <button class="quick-action-card" onclick="openStartClaimModal()">
+                    <!-- QUICK ACTIONS ROW: DIFFERENTIATED ACTION INTENT TINTS -->
+                    <div class="quick-actions-row mt-32">
+                        <button class="quick-action-card qa-tint-primary" onclick="openStartClaimModal()">
                             <div class="qa-icon-box">
                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
                             </div>
@@ -230,7 +267,7 @@
                             <span class="qa-sub">File accident or theft report</span>
                         </button>
 
-                        <button class="quick-action-card" onclick="openStartClaimModal()">
+                        <button class="quick-action-card qa-tint-info" onclick="openStartClaimModal()">
                             <div class="qa-icon-box">
                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
                             </div>
@@ -238,7 +275,7 @@
                             <span class="qa-sub">Add missing claim evidence</span>
                         </button>
 
-                        <button class="quick-action-card" onclick="navigateTo('workspace')">
+                        <button class="quick-action-card qa-tint-success" onclick="navigateTo('workspace')">
                             <div class="qa-icon-box">
                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
                             </div>
@@ -246,7 +283,7 @@
                             <span class="qa-sub">Run AI readiness analysis</span>
                         </button>
 
-                        <button class="quick-action-card" onclick="navigateTo('policies')">
+                        <button class="quick-action-card qa-tint-neutral" onclick="navigateTo('policies')">
                             <div class="qa-icon-box">
                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
                             </div>
@@ -256,7 +293,7 @@
                     </div>
 
                     <!-- RECENT CLAIMS SECTION -->
-                    <div class="card-enterprise mt-24">
+                    <div class="card-enterprise mt-36">
                         <div class="card-header-flex">
                             <div>
                                 <h3 class="card-title">Recent Claims</h3>
@@ -269,13 +306,13 @@
                             <table class="saas-table-ent">
                                 <thead>
                                     <tr>
-                                        <th>Claim ID</th>
-                                        <th>Vehicle Number</th>
-                                        <th>Type</th>
-                                        <th>Incident Date</th>
-                                        <th>Claim Amount</th>
-                                        <th>Current Status</th>
-                                        <th>Action</th>
+                                        <th>CLAIM ID</th>
+                                        <th>VEHICLE NUMBER</th>
+                                        <th>TYPE</th>
+                                        <th>INCIDENT DATE</th>
+                                        <th>CLAIM AMOUNT</th>
+                                        <th>CURRENT STATUS</th>
+                                        <th>ACTION</th>
                                     </tr>
                                 </thead>
                                 <tbody id="dashboard-recent-claims-body"></tbody>
@@ -317,14 +354,14 @@
                             <table class="saas-table-ent">
                                 <thead>
                                     <tr>
-                                        <th>Claim ID</th>
-                                        <th>Claim Type</th>
-                                        <th>Vehicle Number</th>
-                                        <th>Incident Date</th>
-                                        <th>Claim Amount</th>
-                                        <th>Current Status</th>
-                                        <th>Readiness</th>
-                                        <th>Action</th>
+                                        <th>CLAIM ID</th>
+                                        <th>CLAIM TYPE</th>
+                                        <th>VEHICLE NUMBER</th>
+                                        <th>INCIDENT DATE</th>
+                                        <th>CLAIM AMOUNT</th>
+                                        <th>CURRENT STATUS</th>
+                                        <th>READINESS</th>
+                                        <th>ACTION</th>
                                     </tr>
                                 </thead>
                                 <tbody id="claims-table-body"></tbody>
@@ -345,7 +382,7 @@
                             <button class="btn-secondary" onclick="navigateTo('my-claims')">← My Claims</button>
                             <h2 id="ws-claim-id" class="ws-title">CLM-CUSTOM-001</h2>
                             <span id="ws-incident-badge" class="badge-neutral">Accident</span>
-                            <span id="ws-status-badge" class="badge-status request">MORE INFORMATION NEEDED</span>
+                            <span id="ws-status-badge" class="badge-status request"><span class="badge-icon-symbol">!</span> MORE INFORMATION NEEDED</span>
                         </div>
                         <div class="ws-header-right">
                             <button class="btn-secondary" onclick="navigateTo('claim-report')">
@@ -419,7 +456,7 @@
                                     <div class="ai-check-item">
                                         <div class="check-item-header">
                                             <span class="check-title">1. DOCUMENT CHECK</span>
-                                            <span class="status-badge request">3/4 Docs</span>
+                                            <span class="status-badge request"><span class="badge-icon-symbol">!</span> 3/4 Docs</span>
                                         </div>
                                         <div class="check-details mt-8">
                                             <div class="check-sub-row positive">✓ Claim Form available</div>
@@ -431,7 +468,7 @@
                                     <div class="ai-check-item mt-12">
                                         <div class="check-item-header">
                                             <span class="check-title">2. INFORMATION CHECK</span>
-                                            <span class="status-badge approve">Complete</span>
+                                            <span class="status-badge approve"><span class="badge-icon-symbol">✓</span> Complete</span>
                                         </div>
                                         <div class="check-details mt-8">
                                             <div class="check-sub-row positive">✓ Vehicle registration matches policy schedule</div>
@@ -442,7 +479,7 @@
                                     <div class="ai-check-item mt-12">
                                         <div class="check-item-header">
                                             <span class="check-title">3. CONSISTENCY CHECK</span>
-                                            <span class="status-badge request">1 Issue</span>
+                                            <span class="status-badge request"><span class="badge-icon-symbol">!</span> 1 Issue</span>
                                         </div>
                                         <div class="check-details mt-8">
                                             <div class="check-sub-row warning">! Incident date missing from Claim Form</div>
@@ -452,7 +489,7 @@
                                     <div class="ai-check-item mt-12">
                                         <div class="check-item-header">
                                             <span class="check-title">4. COVERAGE CHECK</span>
-                                            <span class="status-badge approve">Covered</span>
+                                            <span class="status-badge approve"><span class="badge-icon-symbol">✓</span> Covered</span>
                                         </div>
                                         <div class="check-details mt-8">
                                             <div class="check-sub-row positive">✓ Accidental damage appears covered under Own Damage terms</div>
@@ -462,7 +499,7 @@
                                     <div class="ai-check-item mt-12">
                                         <div class="check-item-header">
                                             <span class="check-title">5. POLICY CONDITIONS</span>
-                                            <span class="status-badge request">Action Needed</span>
+                                            <span class="status-badge request"><span class="badge-icon-symbol">!</span> Action Needed</span>
                                         </div>
                                         <div class="check-details mt-8">
                                             <div class="check-sub-row warning">! Valid driving licence required under Clause 5.1</div>
@@ -475,7 +512,7 @@
                             <div id="ws-contradiction-card" class="card-enterprise alert-border hidden">
                                 <div class="alert-header">
                                     <h4 class="card-title warning-text">Information Mismatch</h4>
-                                    <span id="ws-issues-count-badge" class="badge-status request">1 Issue</span>
+                                    <span id="ws-issues-count-badge" class="badge-status request"><span class="badge-icon-symbol">!</span> 1 Issue</span>
                                 </div>
                                 <div id="ws-contradictions-container" class="issue-cards-stack mt-16"></div>
                             </div>
@@ -556,12 +593,12 @@
                             <table class="saas-table-ent">
                                 <thead>
                                     <tr>
-                                        <th>Document Name</th>
-                                        <th>Document Type</th>
-                                        <th>Associated Claim</th>
-                                        <th>Uploaded Date</th>
-                                        <th>Status</th>
-                                        <th>Actions</th>
+                                        <th>DOCUMENT NAME</th>
+                                        <th>DOCUMENT TYPE</th>
+                                        <th>ASSOCIATED CLAIM</th>
+                                        <th>UPLOADED DATE</th>
+                                        <th>STATUS</th>
+                                        <th>ACTIONS</th>
                                     </tr>
                                 </thead>
                                 <tbody id="documents-table-body"></tbody>
@@ -590,7 +627,7 @@
                                         <h4 class="card-title">Driving Licence</h4>
                                         <span class="card-subtitle">Required for: <strong>CLM-CUSTOM-001</strong> (Accident Claim)</span>
                                     </div>
-                                    <span class="status-badge request">Required</span>
+                                    <span class="status-badge request"><span class="badge-icon-symbol">!</span> Required</span>
                                 </div>
                                 <div class="mt-12">
                                     <span class="field-label">REASON</span>
@@ -619,7 +656,7 @@
                                 <h3 class="card-title">My Coverage</h3>
                                 <span class="card-subtitle">Review your active policy terms, limits, and covered benefits</span>
                             </div>
-                            <span class="status-badge approve">ACTIVE</span>
+                            <span class="status-badge approve"><span class="badge-icon-symbol">✓</span> ACTIVE</span>
                         </div>
 
                         <div class="definition-grid-2col mt-20">
