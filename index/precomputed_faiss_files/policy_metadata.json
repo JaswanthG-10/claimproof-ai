@@ -1,0 +1,72 @@
+[
+  {
+    "clause_id": "Clause 1.1",
+    "clause_title": "Policy Details & Idv Limit",
+    "category": "insured declared value",
+    "page": 1,
+    "clause_text": "Section 1.1: The Insured Declared Value (IDV) of the vehicle is fixed at INR 8,00,000. Total claim liability for any single loss or damage shall not exceed this declared IDV limit."
+  },
+  {
+    "clause_id": "Clause 1.2",
+    "clause_title": "Policy Period",
+    "category": "coverage",
+    "page": 1,
+    "clause_text": "Section 1.2: This Motor Comprehensive Policy is valid from 2026-01-01 to 2026-12-31. Loss or damage occurring outside this policy period is not covered."
+  },
+  {
+    "clause_id": "Clause 2.1",
+    "clause_title": "Accidental External Damage Cover",
+    "category": "accidental damage",
+    "page": 2,
+    "clause_text": "Clause 2.1: Accidental external damage caused by collision, impact, overturn, fire, lightning, explosion, or malicious acts is covered subject to policy deductibles and proof of valid driving licence."
+  },
+  {
+    "clause_id": "Clause 3.1",
+    "clause_title": "Theft Coverage",
+    "category": "theft",
+    "page": 3,
+    "clause_text": "Clause 3.1: Loss of the insured vehicle due to theft is covered subject to immediate Police First Information Report (FIR) submission, final police non-traceable report, and transfer of vehicle registration certificate & keys to insurer."
+  },
+  {
+    "clause_id": "Clause 4.1",
+    "clause_title": "Exclusion - Invalid Driving Licence",
+    "category": "exclusions",
+    "page": 4,
+    "clause_text": "Clause 4.1 Exclusion: The insurer shall not be liable for any loss or damage incurred while the vehicle is driven by any person who does not hold an effective and valid driving licence."
+  },
+  {
+    "clause_id": "Clause 4.2",
+    "clause_title": "Exclusion - Prohibited Commercial Use",
+    "category": "exclusions",
+    "page": 4,
+    "clause_text": "Clause 4.2 Exclusion: The insurer shall not be liable for any loss, damage, or third-party liability if the private personal vehicle is operated or hired for commercial purposes, rideshare taxi services, or carriage of goods for hire/reward."
+  },
+  {
+    "clause_id": "Clause 4.3",
+    "clause_title": "Exclusion - Intoxication & Illegal Driving",
+    "category": "exclusions",
+    "page": 5,
+    "clause_text": "Clause 4.3 Exclusion: Any loss or damage occurring whilst the driver of the vehicle is under the influence of intoxicating liquor or drugs is strictly excluded from coverage."
+  },
+  {
+    "clause_id": "Clause 5.1",
+    "clause_title": "Required Documents - Accidental Damage",
+    "category": "required documents",
+    "page": 6,
+    "clause_text": "Clause 5.1: For accidental damage claims, the insured must submit: (1) Claim Form duly filled and signed, (2) Repair Estimate from authorized repairer, (3) Valid Driving Licence of driver, (4) Registration Certificate (RC)."
+  },
+  {
+    "clause_id": "Clause 5.2",
+    "clause_title": "Required Documents - Theft Claims",
+    "category": "required documents",
+    "page": 6,
+    "clause_text": "Clause 5.2: For theft claims, the insured must submit: (1) Claim Form, (2) Police First Information Report (FIR), (3) Registration Certificate (RC), (4) Keys and ownership transfer documentation."
+  },
+  {
+    "clause_id": "Clause 6.1",
+    "clause_title": "Claim Notification Window",
+    "category": "claim window",
+    "page": 7,
+    "clause_text": "Clause 6.1: Notice of any claim, accident, or theft must be given in writing to the company immediately and within 7 calendar days of the occurrence of the incident."
+  }
+]

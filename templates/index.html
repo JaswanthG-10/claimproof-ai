@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ClaimProof AI | Insurance Claims Evidence Review Assistant</title>
+    <link rel="stylesheet" href="/static/styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Top Navigation Header -->
+        <header class="app-header">
+            <div class="brand">
+                <div class="brand-logo">🛡️</div>
+                <div class="brand-text">
+                    <h1>ClaimProof <span>AI</span></h1>
+                    <span class="track-badge">TRACK_ID=PS02</span>
+                </div>
+            </div>
+            <div class="header-status" id="health-status">
+                <span class="status-indicator loading"></span> Checking System Health...
+            </div>
+        </header>
+
+        <!-- Main Workspace -->
+        <main class="dashboard-grid">
+            
+            <!-- Sidebar / Control Panel -->
+            <aside class="sidebar-panel">
+                <section class="card demo-selector-card">
+                    <div class="card-header">
+                        <h2>🚀 Demo Case Selector</h2>
+                        <p class="subtitle">Select a pre-configured claim package for instant end-to-end evaluation:</p>
+                    </div>
+
+                    <div class="demo-buttons" id="demo-cases-list">
+                        <button class="demo-btn approve-btn" onclick="runDemoCase('claim_001_approve')">
+                            <span class="btn-badge approve">APPROVE</span>
+                            <div class="btn-info">
+                                <strong>Case 1: Standard Accident</strong>
+                                <span>Complete docs, valid dates & limits</span>
+                            </div>
+                        </button>
+
+                        <button class="demo-btn request-btn" onclick="runDemoCase('claim_002_request_information')">
+                            <span class="btn-badge request">REQ INFO</span>
+                            <div class="btn-info">
+                                <strong>Case 2: Missing DL</strong>
+                                <span>Driving Licence document missing</span>
+                            </div>
+                        </button>
+
+                        <button class="demo-btn escalate-btn" onclick="runDemoCase('claim_003_escalate')">
+                            <span class="btn-badge escalate">ESCALATE</span>
+                            <div class="btn-info">
+                                <strong>Case 3: Date Mismatch</strong>
+                                <span>Claim Form vs FIR date conflict</span>
+                            </div>
+                        </button>
+
+                        <button class="demo-btn reject-btn" onclick="runDemoCase('claim_004_reject')">
+                            <span class="btn-badge reject">REJECT</span>
+                            <div class="btn-info">
+                                <strong>Case 4: Commercial Use</strong>
+                                <span>Prohibited rideshare taxi use</span>
+                            </div>
+                        </button>
+                    </div>
+                </section>
+
+                <!-- Custom Claim Upload Form -->
+                <section class="card upload-card">
+                    <div class="card-header">
+                        <h2>📁 Upload Custom Claim</h2>
+                    </div>
+                    <form id="upload-form" class="upload-form">
+                        <div class="form-group">
+                            <label for="claim-id-input">Claim ID</label>
+                            <input type="text" id="claim-id-input" value="claim_custom_001" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="file-input">Claim Documents (PDF / TXT)</label>
+                            <input type="file" id="file-input" multiple required>
+                        </div>
+                        <button type="submit" class="primary-btn" id="analyze-btn">
+                            🔍 Analyze Claim Package
+                        </button>
+                    </form>
+                </section>
+            </aside>
+
+            <!-- Main Results Display Area -->
+            <div class="results-panel">
+                
+                <!-- Initial Empty State -->
+                <div id="empty-state" class="empty-state">
+                    <div class="empty-icon">📊</div>
+                    <h3>No Claim Loaded</h3>
+                    <p>Select a demo case from the sidebar or upload custom claim files to view the live investigator audit matrix.</p>
+                </div>
+
+                <!-- Loading Spinner -->
+                <div id="loading-state" class="loading-state hidden">
+                    <div class="spinner"></div>
+                    <p>Extracting documents, parsing facts, comparing evidence, and evaluating policy clauses...</p>
+                </div>
+
+                <!-- Claim Details Container -->
+                <div id="claim-details" class="claim-details hidden">
+                    
+                    <!-- Top Recommendation Banner -->
+                    <section class="recommendation-banner" id="recommendation-banner">
+                        <div class="rec-status-box">
+                            <span class="rec-label">DECISION RECOMMENDATION</span>
+                            <h2 id="rec-status" class="status-title">---</h2>
+                            <p id="rec-summary" class="status-summary"></p>
+                        </div>
+                        <div class="rec-explanation-box">
+                            <h3>Investigator Reasoning & Grounding</h3>
+                            <p id="rec-explanation" class="explanation-text"></p>
+                        </div>
+                    </section>
+
+                    <!-- Claim Overview Cards -->
+                    <section class="overview-grid">
+                        <div class="info-card">
+                            <span class="info-label">Claim ID</span>
+                            <strong id="meta-claim-id">-</strong>
+                        </div>
+                        <div class="info-card">
+                            <span class="info-label">Claimant Name</span>
+                            <strong id="meta-customer">-</strong>
+                        </div>
+                        <div class="info-card">
+                            <span class="info-label">Vehicle Registration</span>
+                            <strong id="meta-vehicle">-</strong>
+                        </div>
+                        <div class="info-card">
+                            <span class="info-label">Incident Type</span>
+                            <strong id="meta-type">-</strong>
+                        </div>
+                        <div class="info-card">
+                            <span class="info-label">Incident Date</span>
+                            <strong id="meta-date">-</strong>
+                        </div>
+                        <div class="info-card">
+                            <span class="info-label">Claimed Amount</span>
+                            <strong id="meta-amount">-</strong>
+                        </div>
+                    </section>
+
+                    <!-- Document Completeness Section -->
+                    <section class="card section-card">
+                        <div class="card-header">
+                            <h3>📄 Document Completeness Assessment</h3>
+                            <span id="completeness-badge" class="badge">Checking</span>
+                        </div>
+                        <div class="docs-checklist" id="docs-checklist"></div>
+                    </section>
+
+                    <!-- Contradictions Alert Box (Visible if contradictions present) -->
+                    <section class="card section-card contradiction-card hidden" id="contradictions-section">
+                        <div class="card-header alert-header">
+                            <h3>⚠️ Factual Contradictions Detected</h3>
+                        </div>
+                        <div id="contradictions-list" class="contradiction-grid"></div>
+                    </section>
+
+                    <!-- Evidence Matrix -->
+                    <section class="card section-card">
+                        <div class="card-header">
+                            <h3>🔍 Cross-Document Evidence Matrix</h3>
+                        </div>
+                        <div class="table-wrapper">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Field</th>
+                                        <th>Extracted Value</th>
+                                        <th>Source Document</th>
+                                        <th>Page</th>
+                                        <th>Confidence</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="evidence-table-body"></tbody>
+                            </table>
+                        </div>
+                    </section>
+
+                    <!-- Policy Analysis & Clause Grounding -->
+                    <section class="card section-card">
+                        <div class="card-header">
+                            <h3>📜 Policy Clause Applicability & Vector Retrieval</h3>
+                        </div>
+                        <div id="policy-clauses-grid" class="policy-grid"></div>
+                    </section>
+
+                    <!-- Final Findings & Citations -->
+                    <section class="card section-card">
+                        <div class="card-header">
+                            <h3>📌 Audit Findings & Citations</h3>
+                        </div>
+                        <div id="findings-list" class="findings-grid"></div>
+                    </section>
+
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>
