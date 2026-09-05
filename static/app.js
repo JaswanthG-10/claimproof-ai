@@ -700,16 +700,29 @@ async function fetchDemoCasesList() {
 
 async function loadInitialDefaultClaims() {
     try {
-        // Fetch claim_002 (Missing DL) to represent user's primary active claim CLM-CUSTOM-001
-        const res2 = await fetch('/api/demo-cases/claim_002_request_information/analyze', { method: 'POST' });
-        if (res2.ok) {
-            const data2 = await res2.json();
-            const customClaim = JSON.parse(JSON.stringify(data2));
-            customClaim.claim_id = 'CLM-CUSTOM-001';
-            customClaim.customer_name = state.userName || 'Jaswanth G.';
-            customClaim.vehicle_number = 'TN00DM2026';
-            customClaim.claimed_amount = 48750;
+        // Check if CLM-CUSTOM-001 was already saved in SQLite
+        let customClaim = null;
+        try {
+            const savedRes = await fetch('/api/claims/CLM-CUSTOM-001');
+            if (savedRes.ok) {
+                customClaim = await savedRes.json();
+            }
+        } catch (_) {}
 
+        if (!customClaim) {
+            // Fetch claim_002 (Missing DL) to represent user's primary active claim CLM-CUSTOM-001
+            const res2 = await fetch('/api/demo-cases/claim_002_request_information/analyze', { method: 'POST' });
+            if (res2.ok) {
+                const data2 = await res2.json();
+                customClaim = JSON.parse(JSON.stringify(data2));
+                customClaim.claim_id = 'CLM-CUSTOM-001';
+                customClaim.customer_name = state.userName || 'Jaswanth G.';
+                customClaim.vehicle_number = 'TN00DM2026';
+                customClaim.claimed_amount = 48750;
+            }
+        }
+
+        if (customClaim) {
             state.activeClaim = customClaim;
             state.claimsList = [customClaim];
         }
@@ -1854,6 +1867,8 @@ function saveNotificationPreferences() {
 function openUploadDocumentModal(targetDocType) {
     const claim = state.activeClaim || (state.claimsList.length > 0 ? state.claimsList[0] : null);
     
+    state.targetUploadDocType = targetDocType || null;
+
     const claimIdEl = document.getElementById('upload-modal-claim-id');
     const claimTypeEl = document.getElementById('upload-modal-claim-type');
     const selectEl = document.getElementById('upload-doc-type-select');
@@ -1959,7 +1974,7 @@ async function startDocumentUploadProcess() {
     const claimId = claim ? claim.claim_id : 'CLM-CUSTOM-001';
     const file = state.selectedUploadFile;
     const docTypeSelect = document.getElementById('upload-doc-type-select');
-    const docType = docTypeSelect ? docTypeSelect.value : 'claim_evidence';
+    const docType = (docTypeSelect && docTypeSelect.value) ? docTypeSelect.value : (state.targetUploadDocType || 'driving_licence');
 
     if (!file) {
         showToast('Selection Required', 'Please select a file to upload.', 'warning');
@@ -1993,6 +2008,8 @@ async function startDocumentUploadProcess() {
         currentStage = "File Upload";
         const formData = new FormData();
         formData.append('file', file);
+        formData.append('doc_type', docType);
+        formData.append('expected_doc_type', docType);
 
         console.log(`[ClaimProof Pipeline] Stage: Sending file payload to backend endpoint`);
         if (step1) step1.className = 'mini-step complete';
@@ -2092,11 +2109,38 @@ async function startDocumentUploadProcess() {
 
         document.getElementById('upload-state-progress')?.classList.add('hidden');
         document.getElementById('upload-state-error')?.classList.remove('hidden');
+        
         const errMsg = document.getElementById('upload-error-message');
-        if (errMsg) {
-            errMsg.innerHTML = `<strong>${escapeHtml(currentStage)} Failed:</strong> ${escapeHtml(err.message)}`;
+        const errTitle = document.getElementById('upload-error-title');
+        const isDocMismatch = err.message.includes('upload the correct') || 
+                              err.message.includes('Upload rejected') || 
+                              err.message.includes('Invalid Document');
+
+        if (isDocMismatch) {
+            if (errTitle) errTitle.innerText = 'Upload Correct Document';
+            if (errMsg) {
+                errMsg.innerHTML = `
+                    <div style="background:rgba(239,68,68,0.12); border:1px solid rgba(239,68,68,0.25); border-radius:8px; padding:12px 14px; text-align:left; margin-bottom:12px;">
+                        <div style="color:var(--danger); font-weight:700; font-size:14px; display:flex; align-items:center; gap:6px;">
+                            <span>⚠️</span> Document Verification Failed
+                        </div>
+                        <div style="color:var(--text-primary); font-size:13px; margin-top:6px; line-height:1.5;">
+                            ${escapeHtml(err.message)}
+                        </div>
+                    </div>
+                    <div style="font-size:12px; color:var(--text-muted); text-align:left;">
+                        ClaimProof AI verifies evidence authenticity against policy rules: you must upload the requested <strong>${escapeHtml(formatDocName(docType))}</strong> file to continue.
+                    </div>
+                `;
+            }
+            showToast('Document Mismatch', 'Please upload the correct required document.', 'warning');
+        } else {
+            if (errTitle) errTitle.innerText = 'Upload Failed';
+            if (errMsg) {
+                errMsg.innerHTML = `<strong>${escapeHtml(currentStage)} Failed:</strong> ${escapeHtml(err.message)}`;
+            }
+            showToast('Upload Error', `${currentStage}: ${err.message}`, 'error');
         }
-        showToast('Upload Error', `${currentStage}: ${err.message}`, 'error');
         
         // Re-render workspace to reflect document failure state
         if (state.activeClaim) renderWorkspace(state.activeClaim);

@@ -1,4 +1,4 @@
-﻿import os
+import os
 import shutil
 import pytest
 from fastapi.testclient import TestClient
@@ -278,3 +278,57 @@ def test_special_character_filename_upload():
     assert "claim_id" in data
     assert data["claim_id"] == "claim_001_approve"
     assert "recommendation" in data
+
+
+def test_upload_mismatched_document_rejected():
+    """
+    Test that uploading an incorrect document type (e.g. Repair Estimate instead of Driving Licence)
+    is rejected with HTTP 400 and actionable guidance.
+    """
+    re_path = os.path.join(BASE_CLAIMS_DIR, "claim_001_approve", "repair_estimate.pdf")
+    with open(re_path, "rb") as f:
+        re_bytes = f.read()
+
+    res = client.post(
+        "/api/claims/claim_002_request_information/documents",
+        files={"file": ("repair_estimate.pdf", re_bytes, "application/pdf")},
+        data={"expected_doc_type": "driving_licence"}
+    )
+    assert res.status_code == 400
+    detail = res.json().get("detail", "")
+    assert "Upload rejected" in detail
+    assert "Driving Licence" in detail
+    assert "Please upload the correct document" in detail
+
+
+def test_upload_correct_document_with_type_accepted():
+    """
+    Test that uploading the correct document type (Driving Licence) when expected
+    succeeds with HTTP 200 and upgrades claim to APPROVE.
+    """
+    test_id = "test_clm_upload_dl_verified"
+    test_dir = os.path.join(BASE_CLAIMS_DIR, test_id)
+    src_dir = os.path.join(BASE_CLAIMS_DIR, "claim_002_request_information")
+
+    os.makedirs(test_dir, exist_ok=True)
+    for f in os.listdir(src_dir):
+        shutil.copy2(os.path.join(src_dir, f), os.path.join(test_dir, f))
+
+    try:
+        dl_path = os.path.join(BASE_CLAIMS_DIR, "claim_001_approve", "driving_licence.pdf")
+        with open(dl_path, "rb") as f:
+            dl_bytes = f.read()
+
+        res = client.post(
+            f"/api/claims/{test_id}/documents",
+            files={"file": ("driving_licence.pdf", dl_bytes, "application/pdf")},
+            data={"expected_doc_type": "driving_licence"}
+        )
+        assert res.status_code == 200
+        data = res.json()
+        assert data["recommendation"] == "APPROVE"
+        assert len(data["completeness"]["missing_documents"]) == 0
+        assert "driving_licence" in data["completeness"]["submitted_documents"]
+    finally:
+        if os.path.exists(test_dir):
+            shutil.rmtree(test_dir, ignore_errors=True)

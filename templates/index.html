@@ -438,6 +438,55 @@
                         </button>
                     </div>
 
+                    <!-- PROBLEM STATEMENT & AI SOLUTION ARCHITECTURE CARD -->
+                    <div class="card-enterprise mt-36 problem-solution-card">
+                        <div class="card-header-flex">
+                            <div style="display:flex; align-items:center; gap:12px;">
+                                <div class="solution-shield-badge">AI</div>
+                                <div>
+                                    <h3 class="card-title">Automated Multi-Document Evidence Review</h3>
+                                    <span class="card-subtitle">How ClaimProof AI replaces slow, confusing manual document comparison</span>
+                                </div>
+                            </div>
+                            <span class="status-badge approve"><span class="badge-icon-symbol">✓</span> Core Architecture Active</span>
+                        </div>
+
+                        <div class="problem-solution-body mt-20">
+                            <div class="problem-box">
+                                <span class="field-label" style="color:var(--warning);">THE PROBLEM</span>
+                                <p class="body-text mt-4">
+                                    Insurance claim review is often slow and confusing because investigators must manually compare multiple documents such as claim forms, repair estimates, FIRs, incident descriptions, and policy documents.
+                                </p>
+                            </div>
+
+                            <div class="solution-box mt-16">
+                                <span class="field-label" style="color:var(--info);">CLAIMPROOF AI SOLUTION</span>
+                                <p class="body-text mt-4">
+                                    ClaimProof AI solves this problem by automatically reviewing all submitted claim documents, checking whether required information is complete and consistent, comparing the claim with insurance policy rules, identifying contradictions or missing documents, and showing the exact policy clauses related to each finding.
+                                </p>
+
+                                <div class="recommendation-outcomes-grid mt-16">
+                                    <div class="outcome-pill approve">
+                                        <strong><span class="badge-icon-symbol">✓</span> Approve</strong>
+                                        <span>Complete evidence, verified documents, and fully policy compliant</span>
+                                    </div>
+                                    <div class="outcome-pill request">
+                                        <strong><span class="badge-icon-symbol">!</span> Request More Info</strong>
+                                        <span>Missing documents (e.g. Driving Licence) or unverified gaps</span>
+                                    </div>
+                                    <div class="outcome-pill reject">
+                                        <strong><span class="badge-icon-symbol">✕</span> Reject</strong>
+                                        <span>Policy exclusion or ineligibility detected (e.g. Clause 4.2)</span>
+                                    </div>
+                                    <div class="outcome-pill escalate">
+                                        <strong><span class="badge-icon-symbol">⚑</span> Human Review</strong>
+                                        <span>Uncertain cases flagged for claims officer instead of automated decision</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- RECENT CLAIMS SECTION -->
                     <div class="card-enterprise mt-36">
                         <div class="card-header-flex">
@@ -1351,11 +1400,11 @@
                 <!-- ERROR STATE -->
                 <div id="upload-state-error" class="upload-result-card error hidden">
                     <div class="result-icon-circle error">✕</div>
-                    <h3 class="mt-12">Upload Failed</h3>
+                    <h3 id="upload-error-title" class="mt-12">Upload Failed</h3>
                     <p id="upload-error-message" class="body-text mt-6">The document could not be verified. Please check the file and try again.</p>
                     <div class="form-actions-right mt-24">
                         <button class="btn-secondary" onclick="closeUploadDocumentModal()">Cancel</button>
-                        <button class="btn-primary" onclick="resetUploadModalToIdle()">Try Again</button>
+                        <button class="btn-primary" onclick="resetUploadModalToIdle()">Try Again / Choose Correct File</button>
                     </div>
                 </div>
 

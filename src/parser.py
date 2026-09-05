@@ -1,4 +1,4 @@
-﻿import os
+import os
 import re
 import logging
 from typing import List, Dict, Any, Optional, Tuple
@@ -100,6 +100,106 @@ def detect_document_type(filename: str, text_sample: str = "") -> Tuple[str, flo
         return "irrelevant_document", 0.90
 
     return "supporting_document", 0.50
+
+
+DOC_TYPE_NORMALIZATION = {
+    "driving_licence": "driving_licence",
+    "driving_license": "driving_licence",
+    "driving license": "driving_licence",
+    "dl": "driving_licence",
+    "registration_certificate": "registration_certificate",
+    "registration": "registration_certificate",
+    "rc": "registration_certificate",
+    "repair_estimate": "repair_estimate",
+    "estimate": "repair_estimate",
+    "quotation": "repair_estimate",
+    "invoice": "repair_estimate",
+    "police_fir": "fir",
+    "fir": "fir",
+    "claim_form": "claim_form",
+    "incident_description": "incident_description",
+    "policy": "policy"
+}
+
+HUMAN_READABLE_DOC_NAMES = {
+    "driving_licence": "Driving Licence",
+    "registration_certificate": "Registration Certificate (RC)",
+    "repair_estimate": "Repair Estimate / Invoice",
+    "fir": "Police FIR",
+    "claim_form": "Signed Claim Form",
+    "incident_description": "Incident Description",
+    "policy": "Policy Document",
+    "supporting_document": "General Supporting Document",
+    "irrelevant_document": "Non-Insurance Document"
+}
+
+CONTENT_KEYWORDS = {
+    "driving_licence": [
+        "driving licence", "driving license", "licence no", "license no", "authorised to drive",
+        "dl no", "valid up to", "motor vehicles department", "rto", "transport department",
+        "class of vehicle", "date of birth", "badge no"
+    ],
+    "registration_certificate": [
+        "certificate of registration", "form 23", "registration no", "chassis no",
+        "engine no", "rc book", "vehicle class", "maker's classification"
+    ],
+    "repair_estimate": [
+        "repair estimate", "service center", "authorized service", "estimate no",
+        "spare parts", "labour charges", "parts total", "loss estimate"
+    ],
+    "fir": [
+        "first information report", "police station", "fir no", "under section",
+        "ipc section", "station house officer"
+    ],
+    "claim_form": [
+        "claim form", "motor claim form", "claim id:", "details of accident",
+        "policyholder statement"
+    ]
+}
+
+
+def validate_uploaded_document_type(
+    filename: str,
+    raw_text: str,
+    expected_type: Optional[str]
+) -> Tuple[bool, str, str]:
+    """
+    Validate whether the uploaded document matches the required/expected document type.
+    Returns: (is_valid, detected_type, error_reason)
+    """
+    detected_type, conf = detect_document_type(filename, raw_text)
+
+    if not expected_type or expected_type.strip().lower() in ["other", "supporting_document", "all", ""]:
+        return True, detected_type, ""
+
+    expected_norm = DOC_TYPE_NORMALIZATION.get(expected_type.strip().lower(), expected_type.strip().lower())
+
+    # If detected type directly matches expected
+    if detected_type == expected_norm:
+        return True, detected_type, ""
+
+    # Check fallback keywords in text if detected_type wasn't confident or was generic
+    text_lower = raw_text.lower()
+    expected_keywords = CONTENT_KEYWORDS.get(expected_norm, [])
+    if any(kw in text_lower for kw in expected_keywords):
+        return True, expected_norm, ""
+
+    # Mismatch detected
+    expected_label = HUMAN_READABLE_DOC_NAMES.get(expected_norm, expected_norm.replace("_", " ").title())
+    detected_label = HUMAN_READABLE_DOC_NAMES.get(detected_type, detected_type.replace("_", " ").title())
+
+    if detected_type in HUMAN_READABLE_DOC_NAMES and detected_type not in ["supporting_document", "irrelevant_document"]:
+        err_msg = (
+            f"Upload rejected: You are uploading for '{expected_label}', but the uploaded document "
+            f"was detected as a '{detected_label}'. Please upload the correct document."
+        )
+    else:
+        err_msg = (
+            f"Upload rejected: The uploaded file '{filename}' does not appear to be a valid {expected_label}. "
+            f"Please upload the correct document."
+        )
+
+    return False, detected_type, err_msg
 
 
 def parse_pdf_file(filepath: str) -> ParsedDocument:

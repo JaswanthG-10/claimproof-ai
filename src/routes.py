@@ -3,6 +3,7 @@ import sqlite3
 import json
 import shutil
 import logging
+import tempfile
 from typing import List, Dict, Any, Optional
 from fastapi import APIRouter, Request, UploadFile, File, Form, HTTPException
 from fastapi.responses import HTMLResponse, JSONResponse, FileResponse
@@ -21,6 +22,7 @@ from src.schemas import (
 from src.policy_index import load_policy_clauses_from_file
 from src.claim_analysis import analyze_claim_package, get_shared_policy_index
 from src.file_security import sanitize_filename, validate_claim_id, validate_file_upload
+from src.parser import validate_uploaded_document_type, parse_document, DOC_TYPE_NORMALIZATION
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -371,12 +373,16 @@ async def analyze_uploaded_claim(
 @router.post("/api/claims/{claim_id}/documents")
 async def upload_document_to_claim(
     claim_id: str,
-    file: UploadFile = File(...)
+    file: UploadFile = File(...),
+    doc_type: Optional[str] = Form(None),
+    expected_doc_type: Optional[str] = Form(None)
 ):
     """
     Real document upload endpoint:
     - Validates file security and claim ID.
-    - Saves document to claim directory.
+    - Uses AI parser to verify document type against expected document (e.g. driving_licence).
+    - If document type doesn't match expected requirement, rejects upload with clean actionable message.
+    - If valid, saves document to claim directory.
     - Re-runs complete analysis pipeline end-to-end.
     - Persists updated review cleanly.
     - Returns updated ClaimReview payload.
@@ -385,24 +391,57 @@ async def upload_document_to_claim(
     base_dir = get_claims_base_dir()
     claim_dir = os.path.join(base_dir, safe_claim_id)
 
-    # If folder doesn't exist, create it (or copy base documents if CLM-CUSTOM-001 based on claim_002)
-    if not os.path.exists(claim_dir):
-        os.makedirs(claim_dir, exist_ok=True)
-        # If user is repairing claim_002 (e.g. adding DL to claim_002), make sure base files exist
-        if safe_claim_id in ["CLM-CUSTOM-001", "claim_002_request_information"]:
-            src_folder = os.path.join(base_dir, "claim_002_request_information")
-            if os.path.exists(src_folder) and src_folder != claim_dir:
-                for sf in os.listdir(src_folder):
-                    shutil.copy2(os.path.join(src_folder, sf), os.path.join(claim_dir, sf))
+    # If folder doesn't exist or is empty, initialize it with base files
+    os.makedirs(claim_dir, exist_ok=True)
+    if safe_claim_id in ["CLM-CUSTOM-001", "claim_002_request_information"]:
+        src_folder = os.path.join(base_dir, "claim_002_request_information")
+        if os.path.exists(src_folder) and src_folder != claim_dir:
+            for sf in os.listdir(src_folder):
+                dest_f = os.path.join(claim_dir, sf)
+                if not os.path.exists(dest_f):
+                    shutil.copy2(os.path.join(src_folder, sf), dest_f)
 
     content = await file.read()
     safe_name = validate_file_upload(file.filename, content)
 
-    target_path = os.path.join(claim_dir, safe_name)
+    target_type = expected_doc_type or doc_type
+
+    # AI Document Type Verification
+    ext = os.path.splitext(safe_name)[1]
+    with tempfile.NamedTemporaryFile(suffix=ext, delete=False) as tmp:
+        tmp.write(content)
+        tmp_path = tmp.name
+
+    try:
+        parsed_doc = parse_document(tmp_path)
+        is_valid, detected_type, err_reason = validate_uploaded_document_type(
+            filename=safe_name,
+            raw_text=parsed_doc.raw_full_text,
+            expected_type=target_type
+        )
+    finally:
+        if os.path.exists(tmp_path):
+            try:
+                os.remove(tmp_path)
+            except OSError:
+                pass
+
+    if not is_valid:
+        logger.warning(f"Document upload rejected for claim '{safe_claim_id}': {err_reason}")
+        raise HTTPException(status_code=400, detail=err_reason)
+
+    # Standardize saved filename for recognized document types
+    saved_filename = safe_name
+    if target_type:
+        norm_t = DOC_TYPE_NORMALIZATION.get(target_type.strip().lower(), target_type.strip().lower())
+        if norm_t == "driving_licence":
+            saved_filename = "driving_licence.pdf" if safe_name.lower().endswith(".pdf") else safe_name
+
+    target_path = os.path.join(claim_dir, saved_filename)
     with open(target_path, "wb") as f:
         f.write(content)
 
-    logger.info(f"Saved uploaded document '{safe_name}' to {claim_dir}. Re-analyzing claim package...")
+    logger.info(f"Saved verified document '{saved_filename}' to {claim_dir}. Re-analyzing claim package...")
 
     # Re-run full end-to-end pipeline
     updated_review = analyze_claim_package(safe_claim_id, claim_dir)
