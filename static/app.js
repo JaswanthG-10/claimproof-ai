@@ -161,34 +161,45 @@ function initParticleNetwork() {
 
     function resize() {
         if (!particleCanvas) return;
-        particleCanvas.width = window.innerWidth;
-        particleCanvas.height = window.innerHeight;
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        particleCanvas.width = window.innerWidth * dpr;
+        particleCanvas.height = window.innerHeight * dpr;
+        particleCanvas.style.width = window.innerWidth + 'px';
+        particleCanvas.style.height = window.innerHeight + 'px';
+        particleCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
     }
     resize();
     window.addEventListener('resize', resize);
 
     particles = [];
-    const count = Math.min(75, Math.max(35, Math.floor(window.innerWidth / 18)));
-    const colors = ['rgba(99, 102, 241, ', 'rgba(6, 182, 212, ', 'rgba(129, 140, 248, '];
+    const count = Math.min(80, Math.max(40, Math.floor(window.innerWidth / 16)));
+    const colors = [
+        'rgba(99, 102, 241, ',  // Indigo
+        'rgba(6, 182, 212, ',   // Cyan
+        'rgba(139, 92, 246, ',  // Violet
+        'rgba(20, 184, 166, '   // Teal
+    ];
 
     for (let i = 0; i < count; i++) {
+        const depth = Math.random() * 0.8 + 0.4; // Layered planes for parallax depth
         particles.push({
-            x: Math.random() * (particleCanvas.width || window.innerWidth),
-            y: Math.random() * (particleCanvas.height || window.innerHeight),
-            vx: (Math.random() - 0.5) * 0.65,
-            vy: (Math.random() - 0.5) * 0.65,
-            radius: Math.random() * 2 + 1.2,
+            x: Math.random() * window.innerWidth,
+            y: Math.random() * window.innerHeight,
+            vx: (Math.random() - 0.5) * 0.5 * depth,
+            vy: (Math.random() - 0.5) * 0.5 * depth,
+            radius: (Math.random() * 1.8 + 1.2) * depth,
+            depth: depth,
             baseColor: colors[Math.floor(Math.random() * colors.length)],
-            alpha: Math.random() * 0.45 + 0.35,
+            alpha: (Math.random() * 0.4 + 0.3) * depth,
             pulseSpeed: Math.random() * 0.02 + 0.01,
             pulseOffset: Math.random() * Math.PI * 2
         });
     }
 
-    // Mouse tracking for smooth parallax
+    // Mouse tracking for subtle parallax
     window.addEventListener('mousemove', (e) => {
-        targetMouseX = (e.clientX - window.innerWidth / 2) * 0.04;
-        targetMouseY = (e.clientY - window.innerHeight / 2) * 0.04;
+        targetMouseX = (e.clientX - window.innerWidth / 2) * 0.05;
+        targetMouseY = (e.clientY - window.innerHeight / 2) * 0.05;
     });
 
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -202,31 +213,31 @@ function initParticleNetwork() {
         mouseX += (targetMouseX - mouseX) * 0.08;
         mouseY += (targetMouseY - mouseY) * 0.08;
 
-        particleCtx.clearRect(0, 0, particleCanvas.width, particleCanvas.height);
+        particleCtx.clearRect(0, 0, window.innerWidth, window.innerHeight);
 
-        const maxDist = 135;
-        const width = particleCanvas.width;
-        const height = particleCanvas.height;
+        const maxDist = 130;
+        const width = window.innerWidth;
+        const height = window.innerHeight;
 
-        // Proximity connecting lines
+        // Proximity connecting lines (layered fading)
         for (let i = 0; i < particles.length; i++) {
             const p1 = particles[i];
-            const p1x = p1.x + mouseX * (p1.radius * 0.6);
-            const p1y = p1.y + mouseY * (p1.radius * 0.6);
+            const p1x = p1.x + mouseX * p1.depth;
+            const p1y = p1.y + mouseY * p1.depth;
 
             for (let j = i + 1; j < particles.length; j++) {
                 const p2 = particles[j];
-                const p2x = p2.x + mouseX * (p2.radius * 0.6);
-                const p2y = p2.y + mouseY * (p2.radius * 0.6);
+                const p2x = p2.x + mouseX * p2.depth;
+                const p2y = p2.y + mouseY * p2.depth;
 
                 const dx = p1x - p2x;
                 const dy = p1y - p2y;
                 const dist = Math.sqrt(dx * dx + dy * dy);
 
                 if (dist < maxDist) {
-                    const lineAlpha = (1 - dist / maxDist) * 0.18;
+                    const lineAlpha = (1 - dist / maxDist) * 0.16 * Math.min(p1.depth, p2.depth);
                     particleCtx.strokeStyle = `rgba(99, 102, 241, ${lineAlpha})`;
-                    particleCtx.lineWidth = 1;
+                    particleCtx.lineWidth = 0.9;
                     particleCtx.beginPath();
                     particleCtx.moveTo(p1x, p1y);
                     particleCtx.lineTo(p2x, p2y);
@@ -235,7 +246,7 @@ function initParticleNetwork() {
             }
         }
 
-        // Particle nodes
+        // Particle nodes with glow halo
         for (let i = 0; i < particles.length; i++) {
             const p = particles[i];
             if (!prefersReducedMotion) {
@@ -249,10 +260,10 @@ function initParticleNetwork() {
             }
 
             const currentAlpha = p.alpha + Math.sin(time * p.pulseSpeed * 100 + p.pulseOffset) * 0.15;
-            const px = p.x + mouseX * (p.radius * 0.6);
-            const py = p.y + mouseY * (p.radius * 0.6);
+            const px = p.x + mouseX * p.depth;
+            const py = p.y + mouseY * p.depth;
 
-            // Outer glow halo
+            // Ambient outer glow
             const grad = particleCtx.createRadialGradient(px, py, 0, px, py, p.radius * 3.5);
             grad.addColorStop(0, p.baseColor + Math.max(0.08, currentAlpha) + ')');
             grad.addColorStop(1, p.baseColor + '0)');
@@ -263,7 +274,7 @@ function initParticleNetwork() {
             particleCtx.fill();
 
             // Core dot
-            particleCtx.fillStyle = p.baseColor + '0.9)';
+            particleCtx.fillStyle = p.baseColor + '0.95)';
             particleCtx.beginPath();
             particleCtx.arc(px, py, p.radius, 0, Math.PI * 2);
             particleCtx.fill();
@@ -297,13 +308,13 @@ function initCardTilt() {
         const xPct = mouseX / bounds.width;
         const yPct = mouseY / bounds.height;
 
-        const tiltX = (0.5 - yPct) * 16;
-        const tiltY = (xPct - 0.5) * 16;
+        const tiltX = (0.5 - yPct) * 14;
+        const tiltY = (xPct - 0.5) * 14;
 
         card.style.transform = `perspective(1000px) rotateX(${tiltX.toFixed(2)}deg) rotateY(${tiltY.toFixed(2)}deg) scale3d(1.02, 1.02, 1.02)`;
 
         if (glow) {
-            glow.style.background = `radial-gradient(circle at ${mouseX}px ${mouseY}px, rgba(255, 255, 255, 0.16) 0%, rgba(99, 102, 241, 0.08) 35%, transparent 65%)`;
+            glow.style.background = `radial-gradient(circle at ${mouseX}px ${mouseY}px, rgba(255, 255, 255, 0.18) 0%, rgba(99, 102, 241, 0.12) 35%, transparent 65%)`;
             glow.style.opacity = '1';
         }
     });
@@ -339,10 +350,16 @@ function handleWorkspaceEntry() {
     const shell = document.getElementById('app-shell');
     const enterBtn = document.getElementById('enter-workspace-btn');
 
-    if (enterBtn) enterBtn.disabled = true;
+    // Quick interactive button press before crossfade
+    if (enterBtn) {
+        enterBtn.classList.add('btn-pressed');
+        enterBtn.disabled = true;
+    }
 
-    // Short exit transition: scene zooms in slightly + fades to --background (420ms)
-    welcome?.classList.add('fade-zoom-exit');
+    // Smooth fade/zoom crossfade (180ms) into the workspace
+    setTimeout(() => {
+        welcome?.classList.add('fade-zoom-exit');
+    }, 70);
 
     setTimeout(() => {
         welcome?.classList.add('hidden');
@@ -350,7 +367,7 @@ function handleWorkspaceEntry() {
         state.isTransitioning = false;
         navigateTo('dashboard');
         showToast('Welcome back, Jaswanth', 'Workspace ready for claim readiness review.', 'success');
-    }, 420);
+    }, 250);
 }
 
 function showWelcomeScreen() {

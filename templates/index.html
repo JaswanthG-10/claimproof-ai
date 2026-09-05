@@ -4,10 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ClaimProof AI | Smart Claim Checker</title>
-    <!-- Google Font: Inter -->
+    <!-- Google Fonts: Sora, Space Grotesk, Inter, JetBrains Mono -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Outfit:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Outfit:wght@400;500;600;700;800&family=Sora:wght@500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
     <!-- Three.js for Cinematic 3D Ambient Scene -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <link rel="stylesheet" href="/static/styles.css">
@@ -18,7 +18,13 @@
     <!-- CINEMATIC 3D MOTION LOGIN ENTRY PAGE       -->
     <!-- ========================================== -->
     <div id="welcome-screen" class="cinematic-login-screen">
-        <!-- 1. Floating Gradient Orbs (Blue, Violet) -->
+        <!-- 0. Live Interactive Particle Network Canvas -->
+        <canvas id="login-particle-canvas" class="login-particle-canvas"></canvas>
+
+        <!-- 1. Ambient Breathing Aura behind Hero Card -->
+        <div class="login-ambient-aura"></div>
+
+        <!-- 2. Floating Gradient Orbs (Indigo, Cyan, Violet) -->
         <div class="login-orb login-orb-1"></div>
         <div class="login-orb login-orb-2"></div>
         <div class="login-orb login-orb-3"></div>
@@ -120,8 +126,8 @@
             <div id="login-card-container" class="login-glass-card">
                 <div id="login-card-glow" class="login-specular-glow"></div>
                 
-                <!-- Rotating Conic Border Shield with Pulse Rings -->
-                <div class="shield-conic-wrapper">
+                <!-- Rotating Conic Border Shield with Pulse Rings (Stagger 1) -->
+                <div class="shield-conic-wrapper stagger-1">
                     <div class="conic-animated-glow"></div>
                     <div class="shield-pulse-ring ring-a"></div>
                     <div class="shield-pulse-ring ring-b"></div>
@@ -133,19 +139,21 @@
                     </div>
                 </div>
 
-                <!-- Shimmer Heading -->
-                <h1 class="login-brand-title shimmer-heading">ClaimProofAI</h1>
-                <p class="login-brand-tagline">AI-driven evidence review and instant policy eligibility verification for motor insurance claims.</p>
+                <!-- Shimmer Heading & Tagline (Stagger 2) -->
+                <div class="stagger-2">
+                    <h1 class="login-brand-title shimmer-heading">ClaimProofAI</h1>
+                    <p class="login-brand-tagline">AI-driven evidence review and instant policy eligibility verification for motor insurance claims.</p>
+                </div>
                 
-                <!-- Feature Pills -->
-                <div class="login-feature-pills">
+                <!-- Feature Pills (Stagger 3) -->
+                <div class="login-feature-pills stagger-3">
                     <span class="feat-pill">Zero-credential access</span>
                     <span class="feat-pill">Contradiction Detection</span>
                     <span class="feat-pill">Policy Grounded</span>
                 </div>
 
-                <!-- CTA Button with Sliding Arrow -->
-                <div class="login-action-area mt-24">
+                <!-- CTA Button with Sliding Arrow (Stagger 4) -->
+                <div class="login-action-area mt-24 stagger-4">
                     <button id="enter-workspace-btn" class="btn-primary btn-enter-workspace" onclick="handleWorkspaceEntry()">
                         <span>Enter Workspace</span>
                         <svg class="arrow-slide" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
@@ -156,8 +164,8 @@
                     <span class="enter-key-hint mt-12">Press <kbd class="enter-kbd">Enter ↵</kbd> to navigate</span>
                 </div>
 
-                <!-- Credential-less Footer -->
-                <div class="login-card-footer">
+                <!-- Credential-less Footer (Stagger 5) -->
+                <div class="login-card-footer stagger-5">
                     <span class="status-dot-green"></span>
                     <span>No credentials required · Instant policyholder sandbox</span>
                 </div>
