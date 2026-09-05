@@ -517,12 +517,13 @@
                     <!-- PAGE HEADER -->
                     <div class="workspace-header">
                         <div class="ws-header-left">
-                            <button class="btn-secondary" onclick="navigateTo('my-claims')">← My Claims</button>
-                            <h2 id="ws-claim-id" class="ws-title">CLM-CUSTOM-001</h2>
-                            <span id="ws-incident-badge" class="badge-neutral">Accident</span>
-                            <span id="ws-status-badge" class="badge-status request"><span class="badge-icon-symbol">!</span> MORE INFORMATION NEEDED</span>
-                        </div>
-                        <div id="ws-status-subtitle" class="card-subtitle mt-4" style="color:var(--text-secondary); font-size:13px; font-weight:500;">Action required: 1 mandatory document pending upload before final claim review.</div>
+                            <div class="ws-header-title-row">
+                                <button class="btn-secondary" onclick="navigateTo('my-claims')">← My Claims</button>
+                                <h2 id="ws-claim-id" class="ws-title">CLM-CUSTOM-001</h2>
+                                <span id="ws-incident-badge" class="badge-neutral">Accident</span>
+                                <span id="ws-status-badge" class="badge-status request"><span class="badge-icon-symbol">!</span> MORE INFORMATION NEEDED</span>
+                            </div>
+                            <div id="ws-status-subtitle" class="card-subtitle mt-4" style="color:var(--text-secondary); font-size:13px; font-weight:500;">Action required: 1 mandatory document pending upload before final claim review.</div>
                         </div>
                         <div class="ws-header-right">
                             <button class="btn-secondary" onclick="navigateTo('claim-report')">
