@@ -48,6 +48,46 @@ def init_sqlite_db():
     );
     """)
 
+    try:
+        cursor.execute("ALTER TABLE claims ADD COLUMN recommendation_label TEXT")
+    except sqlite3.OperationalError:
+        pass
+
+    try:
+        cursor.execute("ALTER TABLE evidence ADD COLUMN raw_text TEXT")
+    except sqlite3.OperationalError:
+        pass
+
+    try:
+        cursor.execute("ALTER TABLE findings ADD COLUMN policy_clause TEXT")
+    except sqlite3.OperationalError:
+        pass
+
+    try:
+        cursor.execute("ALTER TABLE findings ADD COLUMN policy_page INTEGER")
+    except sqlite3.OperationalError:
+        pass
+
+
+    try:
+        cursor.execute("ALTER TABLE reviews ADD COLUMN recommendation_label TEXT")
+    except sqlite3.OperationalError:
+        pass
+
+    try:
+        cursor.execute("ALTER TABLE reviews ADD COLUMN explanation TEXT")
+    except sqlite3.OperationalError:
+        pass
+
+    try:
+        cursor.execute("ALTER TABLE reviews ADD COLUMN raw_json TEXT")
+    except sqlite3.OperationalError:
+        pass
+
+
+
+
+
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS documents (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
