@@ -27,10 +27,12 @@ static_dir = os.path.join(os.path.dirname(__file__), "static")
 if os.path.exists(static_dir):
     app.mount("/static", StaticFiles(directory=static_dir), name="static")
 
+templates_index = os.path.join(os.path.dirname(__file__), "templates", "index.html")
+
 # Serve templates/index.html at /
 @app.get("/", response_class=FileResponse)
 async def root_view():
-    return FileResponse("templates/index.html")
+    return FileResponse(templates_index)
 
 # Route for standalone React view if desired
 @app.get("/react", response_class=FileResponse)
@@ -38,7 +40,7 @@ async def react_view():
     react_index = os.path.join(frontend_dist, "index.html")
     if os.path.exists(react_index):
         return FileResponse(react_index)
-    return FileResponse("templates/index.html")
+    return FileResponse(templates_index)
 
 if __name__ == "__main__":
     print("=" * 60)

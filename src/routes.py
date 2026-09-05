@@ -26,7 +26,30 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 templates = Jinja2Templates(directory="templates")
 
-DB_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "claimproof.db")
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+DB_PATH = os.path.join(BASE_DIR, "claimproof.db")
+
+if os.environ.get("VERCEL") or os.environ.get("AWS_LAMBDA_FUNCTION_NAME"):
+    tmp_db = "/tmp/claimproof.db"
+    if not os.path.exists(tmp_db) and os.path.exists(DB_PATH):
+        try:
+            shutil.copyfile(DB_PATH, tmp_db)
+        except Exception as e:
+            logger.warning(f"Failed to copy DB to /tmp: {e}")
+    DB_PATH = tmp_db
+
+
+def get_claims_base_dir() -> str:
+    base_dir = os.path.join(BASE_DIR, "data", "claims")
+    if os.environ.get("VERCEL") or os.environ.get("AWS_LAMBDA_FUNCTION_NAME"):
+        tmp_base = "/tmp/data/claims"
+        if not os.path.exists(tmp_base) and os.path.exists(base_dir):
+            try:
+                shutil.copytree(base_dir, tmp_base, dirs_exist_ok=True)
+            except Exception:
+                pass
+        return tmp_base
+    return base_dir
 
 
 def init_sqlite_db():
@@ -329,7 +352,8 @@ async def analyze_uploaded_claim(
     files: List[UploadFile] = File(...)
 ):
     safe_claim_id = validate_claim_id(claim_id)
-    upload_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data", "claims", safe_claim_id)
+    base_dir = get_claims_base_dir()
+    upload_dir = os.path.join(base_dir, safe_claim_id)
     os.makedirs(upload_dir, exist_ok=True)
 
     for file in files:
@@ -358,7 +382,7 @@ async def upload_document_to_claim(
     - Returns updated ClaimReview payload.
     """
     safe_claim_id = validate_claim_id(claim_id)
-    base_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data", "claims")
+    base_dir = get_claims_base_dir()
     claim_dir = os.path.join(base_dir, safe_claim_id)
 
     # If folder doesn't exist, create it (or copy base documents if CLM-CUSTOM-001 based on claim_002)
