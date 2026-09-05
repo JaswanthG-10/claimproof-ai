@@ -171,6 +171,10 @@ def save_review_to_db(review: ClaimReview):
 # Static and Health Routes
 @router.get("/", response_class=FileResponse)
 async def serve_dashboard():
+    return FileResponse("templates/index.html")
+
+@router.get("/react", response_class=FileResponse)
+async def serve_react_app():
     react_index = os.path.join(os.path.dirname(os.path.dirname(__file__)), "frontend", "dist", "index.html")
     if os.path.exists(react_index):
         return FileResponse(react_index)

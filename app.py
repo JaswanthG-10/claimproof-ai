@@ -27,15 +27,14 @@ static_dir = os.path.join(os.path.dirname(__file__), "static")
 if os.path.exists(static_dir):
     app.mount("/static", StaticFiles(directory=static_dir), name="static")
 
-# Catch-all for SPA client routing and public static files (favicon.svg, icons.svg, etc.)
-@app.get("/{full_path:path}")
-async def serve_spa_and_public(full_path: str):
-    # Check if a public file directly in frontend/dist exists
-    candidate = os.path.join(frontend_dist, full_path)
-    if os.path.isfile(candidate):
-        return FileResponse(candidate)
-    
-    # Fallback to React index.html for SPA routing
+# Serve templates/index.html at /
+@app.get("/", response_class=FileResponse)
+async def root_view():
+    return FileResponse("templates/index.html")
+
+# Route for standalone React view if desired
+@app.get("/react", response_class=FileResponse)
+async def react_view():
     react_index = os.path.join(frontend_dist, "index.html")
     if os.path.exists(react_index):
         return FileResponse(react_index)

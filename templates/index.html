@@ -7,7 +7,7 @@
     <!-- Google Font: Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Sora:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Outfit:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <!-- Three.js for Cinematic 3D Ambient Scene -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <link rel="stylesheet" href="/static/styles.css">
@@ -18,32 +18,160 @@
     <!-- CINEMATIC 3D MOTION LOGIN ENTRY PAGE       -->
     <!-- ========================================== -->
     <div id="welcome-screen" class="cinematic-login-screen">
-        <canvas id="login-particle-canvas"></canvas>
-        <div class="login-ambient-aura"></div>
+        <!-- 1. Floating Gradient Orbs (Blue, Violet) -->
+        <div class="login-orb login-orb-1"></div>
+        <div class="login-orb login-orb-2"></div>
+        <div class="login-orb login-orb-3"></div>
+
+        <!-- 2. Subtle Grid Overlay for Depth -->
+        <div class="grid-overlay"></div>
+
+        <!-- 3. Animated Neural Network SVG Layer -->
+        <div class="login-neural-net-layer">
+            <svg viewBox="0 0 840 560" class="neural-svg" preserveAspectRatio="xMidYMid meet">
+                <defs>
+                    <linearGradient id="edgeGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                        <stop offset="0%" stop-color="#4f76c8" stop-opacity="0.2" />
+                        <stop offset="50%" stop-color="#7c5cbf" stop-opacity="0.4" />
+                        <stop offset="100%" stop-color="#4f76c8" stop-opacity="0.2" />
+                    </linearGradient>
+                    <filter id="nodeGlow" x="-30%" y="-30%" width="160%" height="160%">
+                        <feGaussianBlur stdDeviation="4" result="blur" />
+                        <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                    </filter>
+                </defs>
+                <!-- Base Edges -->
+                <line x1="80" y1="100" x2="240" y2="80" stroke="url(#edgeGrad)" stroke-width="1.2" stroke-dasharray="4 4" />
+                <line x1="80" y1="100" x2="240" y2="180" stroke="url(#edgeGrad)" stroke-width="1.2" stroke-dasharray="4 4" />
+                <line x1="80" y1="220" x2="240" y2="180" stroke="url(#edgeGrad)" stroke-width="1.2" stroke-dasharray="4 4" />
+                <line x1="80" y1="220" x2="240" y2="280" stroke="url(#edgeGrad)" stroke-width="1.2" stroke-dasharray="4 4" />
+                <line x1="80" y1="340" x2="240" y2="280" stroke="url(#edgeGrad)" stroke-width="1.2" stroke-dasharray="4 4" />
+                <line x1="80" y1="340" x2="240" y2="380" stroke="url(#edgeGrad)" stroke-width="1.2" stroke-dasharray="4 4" />
+                <line x1="80" y1="460" x2="240" y2="380" stroke="url(#edgeGrad)" stroke-width="1.2" stroke-dasharray="4 4" />
+                <line x1="80" y1="460" x2="240" y2="480" stroke="url(#edgeGrad)" stroke-width="1.2" stroke-dasharray="4 4" />
+                <line x1="240" y1="80" x2="440" y2="120" stroke="url(#edgeGrad)" stroke-width="1.2" stroke-dasharray="4 4" />
+                <line x1="240" y1="180" x2="440" y2="120" stroke="url(#edgeGrad)" stroke-width="1.2" stroke-dasharray="4 4" />
+                <line x1="240" y1="180" x2="440" y2="240" stroke="url(#edgeGrad)" stroke-width="1.2" stroke-dasharray="4 4" />
+                <line x1="240" y1="280" x2="440" y2="240" stroke="url(#edgeGrad)" stroke-width="1.2" stroke-dasharray="4 4" />
+                <line x1="240" y1="280" x2="440" y2="360" stroke="url(#edgeGrad)" stroke-width="1.2" stroke-dasharray="4 4" />
+                <line x1="240" y1="380" x2="440" y2="360" stroke="url(#edgeGrad)" stroke-width="1.2" stroke-dasharray="4 4" />
+                <line x1="240" y1="380" x2="440" y2="460" stroke="url(#edgeGrad)" stroke-width="1.2" stroke-dasharray="4 4" />
+                <line x1="240" y1="480" x2="440" y2="460" stroke="url(#edgeGrad)" stroke-width="1.2" stroke-dasharray="4 4" />
+                <line x1="440" y1="120" x2="620" y2="180" stroke="url(#edgeGrad)" stroke-width="1.2" stroke-dasharray="4 4" />
+                <line x1="440" y1="240" x2="620" y2="180" stroke="url(#edgeGrad)" stroke-width="1.2" stroke-dasharray="4 4" />
+                <line x1="440" y1="240" x2="620" y2="300" stroke="url(#edgeGrad)" stroke-width="1.2" stroke-dasharray="4 4" />
+                <line x1="440" y1="360" x2="620" y2="300" stroke="url(#edgeGrad)" stroke-width="1.2" stroke-dasharray="4 4" />
+                <line x1="440" y1="360" x2="620" y2="420" stroke="url(#edgeGrad)" stroke-width="1.2" stroke-dasharray="4 4" />
+                <line x1="440" y1="460" x2="620" y2="420" stroke="url(#edgeGrad)" stroke-width="1.2" stroke-dasharray="4 4" />
+                <line x1="620" y1="180" x2="760" y2="290" stroke="url(#edgeGrad)" stroke-width="1.2" stroke-dasharray="4 4" />
+                <line x1="620" y1="300" x2="760" y2="290" stroke="url(#edgeGrad)" stroke-width="1.2" stroke-dasharray="4 4" />
+                <line x1="620" y1="420" x2="760" y2="290" stroke="url(#edgeGrad)" stroke-width="1.2" stroke-dasharray="4 4" />
+                <!-- Traveling Wave Highlight Edges -->
+                <line x1="80" y1="100" x2="240" y2="180" stroke="#7c5cbf" stroke-width="2" stroke-dasharray="14 180" class="neural-pulse-line p1" />
+                <line x1="240" y1="180" x2="440" y2="240" stroke="#4f76c8" stroke-width="2" stroke-dasharray="14 180" class="neural-pulse-line p2" />
+                <line x1="440" y1="240" x2="620" y2="300" stroke="#7c5cbf" stroke-width="2" stroke-dasharray="14 180" class="neural-pulse-line p3" />
+                <line x1="620" y1="300" x2="760" y2="290" stroke="#4f76c8" stroke-width="2" stroke-dasharray="14 180" class="neural-pulse-line p4" />
+                <!-- Nodes -->
+                <circle cx="80" cy="100" r="6" fill="#7c5cbf" filter="url(#nodeGlow)" /><text x="80" y="118" fill="#94a3b8" font-size="9" font-family="'JetBrains Mono', monospace" text-anchor="middle">RC</text>
+                <circle cx="80" cy="220" r="6" fill="#7c5cbf" filter="url(#nodeGlow)" /><text x="80" y="238" fill="#94a3b8" font-size="9" font-family="'JetBrains Mono', monospace" text-anchor="middle">DL</text>
+                <circle cx="80" cy="340" r="6" fill="#7c5cbf" filter="url(#nodeGlow)" /><text x="80" y="358" fill="#94a3b8" font-size="9" font-family="'JetBrains Mono', monospace" text-anchor="middle">EST</text>
+                <circle cx="80" cy="460" r="6" fill="#7c5cbf" filter="url(#nodeGlow)" /><text x="80" y="478" fill="#94a3b8" font-size="9" font-family="'JetBrains Mono', monospace" text-anchor="middle">FIR</text>
+                <circle cx="240" cy="80" r="4" fill="#4f76c8" /><circle cx="240" cy="180" r="4" fill="#4f76c8" /><circle cx="240" cy="280" r="4" fill="#4f76c8" /><circle cx="240" cy="380" r="4" fill="#4f76c8" /><circle cx="240" cy="480" r="4" fill="#4f76c8" />
+                <circle cx="440" cy="120" r="4" fill="#4f76c8" /><circle cx="440" cy="240" r="4" fill="#4f76c8" /><circle cx="440" cy="360" r="4" fill="#4f76c8" /><circle cx="440" cy="460" r="4" fill="#4f76c8" />
+                <circle cx="620" cy="180" r="6" fill="#7c5cbf" filter="url(#nodeGlow)" /><text x="620" y="198" fill="#94a3b8" font-size="9" font-family="'JetBrains Mono', monospace" text-anchor="middle">POL-2.1</text>
+                <circle cx="620" cy="300" r="6" fill="#7c5cbf" filter="url(#nodeGlow)" /><text x="620" y="318" fill="#94a3b8" font-size="9" font-family="'JetBrains Mono', monospace" text-anchor="middle">POL-5.1</text>
+                <circle cx="620" cy="420" r="6" fill="#7c5cbf" filter="url(#nodeGlow)" /><text x="620" y="438" fill="#94a3b8" font-size="9" font-family="'JetBrains Mono', monospace" text-anchor="middle">POL-7.2</text>
+                <circle cx="760" cy="290" r="7" fill="#10b981" filter="url(#nodeGlow)" /><text x="760" y="310" fill="#10b981" font-size="9" font-family="'JetBrains Mono', monospace" font-weight="bold" text-anchor="middle">VERIFIED</text>
+            </svg>
+        </div>
+
+        <!-- 4. 3D Spinning Rings & Floating Geometric Shapes -->
+        <div class="login-3d-rings-container">
+            <div class="login-3d-ring ring-1"></div>
+            <div class="login-3d-ring ring-2"></div>
+            <!-- Floating Triangle -->
+            <div class="geo-shape geo-triangle">
+                <svg width="42" height="42" viewBox="0 0 42 42" fill="none">
+                    <polygon points="21,4 38,36 4,36" stroke="#4f76c8" stroke-width="1.5" fill="rgba(79, 118, 200, 0.05)" />
+                </svg>
+            </div>
+            <!-- Floating Hexagon -->
+            <div class="geo-shape geo-hexagon">
+                <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
+                    <polygon points="18,3 32,10 32,26 18,33 4,26 4,10" stroke="#7c5cbf" stroke-width="1.5" fill="rgba(124, 92, 191, 0.06)" />
+                </svg>
+            </div>
+            <!-- Floating Dots -->
+            <div class="geo-shape geo-dots">
+                <span class="geo-dot d1"></span>
+                <span class="geo-dot d2"></span>
+                <span class="geo-dot d3"></span>
+            </div>
+        </div>
+
+        <!-- 5. Top Bar Indicator -->
+        <div class="login-top-pill">
+            <span class="status-dot-green pulse"></span>
+            <span>Autonomous Claim Engine v2.4 · IRDAI Compliant</span>
+        </div>
+
+        <!-- 6. Center Hero Card -->
         <div class="login-card-perspective">
             <div id="login-card-container" class="login-glass-card">
                 <div id="login-card-glow" class="login-specular-glow"></div>
-                <div class="login-brand-shield">
-                    <div class="shield-logo-box login-shield-float">
-                        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+                
+                <!-- Rotating Conic Border Shield with Pulse Rings -->
+                <div class="shield-conic-wrapper">
+                    <div class="conic-animated-glow"></div>
+                    <div class="shield-pulse-ring ring-a"></div>
+                    <div class="shield-pulse-ring ring-b"></div>
+                    <div class="shield-inner-box">
+                        <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
                             <path d="m9 12 2 2 4-4"/>
                         </svg>
                     </div>
-                    <h1 class="login-brand-title">ClaimProof AI</h1>
                 </div>
-                <p class="login-brand-tagline">AI-assisted motor insurance claims evidence review & readiness assessment</p>
+
+                <!-- Shimmer Heading -->
+                <h1 class="login-brand-title shimmer-heading">ClaimProofAI</h1>
+                <p class="login-brand-tagline">AI-driven evidence review and instant policy eligibility verification for motor insurance claims.</p>
                 
-                <div class="login-action-area mt-32">
+                <!-- Feature Pills -->
+                <div class="login-feature-pills">
+                    <span class="feat-pill">Zero-credential access</span>
+                    <span class="feat-pill">Contradiction Detection</span>
+                    <span class="feat-pill">Policy Grounded</span>
+                </div>
+
+                <!-- CTA Button with Sliding Arrow -->
+                <div class="login-action-area mt-24">
                     <button id="enter-workspace-btn" class="btn-primary btn-enter-workspace" onclick="handleWorkspaceEntry()">
                         <span>Enter Workspace</span>
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                        <svg class="arrow-slide" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
                             <line x1="5" y1="12" x2="19" y2="12"/>
                             <polyline points="12 5 19 12 12 19"/>
                         </svg>
                     </button>
-                    <span class="enter-key-hint mt-12">Press Enter ↵ to continue</span>
+                    <span class="enter-key-hint mt-12">Press <kbd class="enter-kbd">Enter ↵</kbd> to navigate</span>
                 </div>
+
+                <!-- Credential-less Footer -->
+                <div class="login-card-footer">
+                    <span class="status-dot-green"></span>
+                    <span>No credentials required · Instant policyholder sandbox</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 7. Screen Bottom Status -->
+        <div class="login-screen-footer">
+            <div class="footer-left">
+                <span class="status-dot-green pulse"></span>
+                <span>Secure · Encrypted · Always on</span>
+            </div>
+            <div class="footer-right">
+                <span>ClaimProofAI Motor Insurance Framework · Port 8000 Active</span>
             </div>
         </div>
     </div>
@@ -53,6 +181,12 @@
     <!-- GLOBAL APPLICATION SHELL                    -->
     <!-- ========================================== -->
     <div id="app-shell" class="app-shell hidden">
+        <!-- Persistent Ambient Orbs & Grid Behind Layout -->
+        <div class="dashboard-ambient-orbs pointer-events-none">
+            <div class="ambient-orb ambient-orb-1"></div>
+            <div class="ambient-orb ambient-orb-2"></div>
+            <div class="grid-overlay dashboard-grid"></div>
+        </div>
 
         <!-- COLLAPSIBLE SIDEBAR (248px Expanded / 72px Collapsed) -->
         <aside id="sidebar" class="sidebar">
