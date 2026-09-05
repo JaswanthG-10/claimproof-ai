@@ -1793,3 +1793,48 @@ h1, h2, h3, h4, h5, h6 {
         transition-duration: 0.01ms !important;
     }
 }
+
+
+/* Enhanced Policy Card Styles */
+.policy-card-cat {
+    background: rgba(24, 24, 36, 0.85);
+    backdrop-filter: blur(16px);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 22px 26px;
+    position: relative;
+    border-left: 5px solid var(--primary);
+    transition: transform var(--transition-fast), border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.policy-card-cat:hover {
+    border-color: var(--border-strong);
+    transform: translateY(-3px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+}
+
+.policy-card-cat.policy-referenced {
+    border-color: rgba(99, 102, 241, 0.6);
+    box-shadow: 0 0 24px rgba(99, 102, 241, 0.22);
+}
+
+.policy-clause-title {
+    font-family: var(--font-heading);
+    font-size: 16.5px;
+    font-weight: 700;
+    color: var(--text-primary);
+    line-height: 1.35;
+}
+
+.policy-clause-desc {
+    font-family: var(--font-body);
+    font-size: 14.5px;
+    line-height: 1.65;
+    color: var(--text-secondary);
+}
+
+.val-error-msg {
+    color: var(--danger);
+    font-size: 11px;
+    font-weight: 500;
+}

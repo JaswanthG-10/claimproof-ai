@@ -388,6 +388,8 @@
                             <span id="ws-incident-badge" class="badge-neutral">Accident</span>
                             <span id="ws-status-badge" class="badge-status request"><span class="badge-icon-symbol">!</span> MORE INFORMATION NEEDED</span>
                         </div>
+                        <div id="ws-status-subtitle" class="card-subtitle mt-4" style="color:var(--text-secondary); font-size:13px; font-weight:500;">Action required: 1 mandatory document pending upload before final claim review.</div>
+                        </div>
                         <div class="ws-header-right">
                             <button class="btn-secondary" onclick="navigateTo('claim-report')">
                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg>
@@ -626,12 +628,41 @@
                         <div class="card-header-flex">
                             <div>
                                 <h3 class="card-title">My Coverage</h3>
-                                <span class="card-subtitle">Review your active policy terms, limits, and covered benefits</span>
+                                <span class="card-subtitle">Review active policy limits, approved claim deductions, and remaining coverage balance</span>
                             </div>
-                            <span class="status-badge approve"><span class="badge-icon-symbol">✓</span> ACTIVE</span>
+                            <span class="status-badge approve"><span class="badge-icon-symbol">✓</span> ACTIVE POL-2026-104</span>
                         </div>
 
-                        <div class="definition-grid-2col mt-20">
+                        <!-- LIVE COVERAGE UTILIZATION METRICS -->
+                        <div class="quick-actions-row mt-20" style="grid-template-columns: repeat(4, 1fr);">
+                            <div class="card-enterprise sub-card" style="padding:16px;">
+                                <span class="field-label">TOTAL INSURED VALUE (IDV)</span>
+                                <h3 style="font-size:20px; font-weight:700; color:var(--text-primary); margin-top:4px;">₹8,00,000</h3>
+                                <span class="metadata-text">Schedule POL-2026-104 Limit</span>
+                            </div>
+
+                            <div class="card-enterprise sub-card" style="padding:16px;">
+                                <span class="field-label">APPROVED CLAIMS</span>
+                                <h3 id="cov-approved-count" style="font-size:20px; font-weight:700; color:var(--success); margin-top:4px;">0 Approved</h3>
+                                <span class="metadata-text">Settled this policy term</span>
+                            </div>
+
+                            <div class="card-enterprise sub-card" style="padding:16px;">
+                                <span class="field-label">APPROVED AMOUNT USED</span>
+                                <h3 id="cov-approved-sum" style="font-size:20px; font-weight:700; color:var(--warning); margin-top:4px;">₹0</h3>
+                                <span class="metadata-text">Deducted from IDV limit</span>
+                            </div>
+
+                            <div class="card-enterprise sub-card" style="padding:16px;">
+                                <span class="field-label">REMAINING INSURED BALANCE</span>
+                                <h3 id="cov-remaining-idv" style="font-size:20px; font-weight:700; color:var(--info); margin-top:4px;">₹8,00,000</h3>
+                                <div class="progress-bar-track mt-8" style="height:5px;">
+                                    <div id="cov-idv-bar" class="progress-bar-fill" style="width: 0%;"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="definition-grid-2col mt-24">
                             <div class="def-item">
                                 <span class="def-label">POLICY PERIOD</span>
                                 <strong class="def-value">01 Jan 2026 – 31 Dec 2026</strong>
@@ -641,33 +672,48 @@
                                 <strong class="def-value">TN00DM2026 (Hyundai Creta)</strong>
                             </div>
                             <div class="def-item">
-                                <span class="def-label">INSURED VALUE (IDV)</span>
-                                <strong class="def-value">₹5,00,000</strong>
-                            </div>
-                            <div class="def-item">
                                 <span class="def-label">POLICY NUMBER</span>
                                 <strong class="def-value">POL-2026-104</strong>
+                            </div>
+                            <div class="def-item">
+                                <span class="def-label">PERMITTED USE</span>
+                                <strong class="def-value">Private & Personal Social Use (Clause 4.2)</strong>
+                            </div>
+                        </div>
+
+                        <!-- CLAIMS REGISTERED UNDER POLICY -->
+                        <div class="mt-28">
+                            <div class="card-header-flex mb-12">
+                                <h4 class="section-heading">Claims Registered Under Policy POL-2026-104</h4>
+                                <button class="btn-primary" onclick="openStartClaimModal()">+ Start New Claim</button>
+                            </div>
+                            <div class="table-container">
+                                <table class="saas-table-ent">
+                                    <thead>
+                                        <tr>
+                                            <th>CLAIM ID</th>
+                                            <th>INCIDENT DATE</th>
+                                            <th>CLAIM TYPE</th>
+                                            <th>CLAIMED AMOUNT</th>
+                                            <th>ASSESSMENT STATUS</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="cov-claims-table-body">
+                                        <!-- Dynamically synced by renderCoverageView -->
+                                    </tbody>
+                                </table>
                             </div>
                         </div>
 
                         <div class="mt-24">
                             <h4 class="section-heading">Covered Benefits</h4>
-                            <div class="check-sub-row positive mt-8">✓ Accidental Damage</div>
-                            <div class="check-sub-row positive mt-4">✓ Theft & Total Loss</div>
-                            <div class="check-sub-row positive mt-4">✓ Third Party Legal Liability</div>
+                            <div class="check-sub-row positive mt-8">✓ Accidental Collision & Own Damage (Clause 2.1)</div>
+                            <div class="check-sub-row positive mt-4">✓ Vehicle Theft & Component Loss (Clause 3.1)</div>
+                            <div class="check-sub-row positive mt-4">✓ Third Party Legal Liability (Clause 1.1)</div>
                         </div>
 
                         <div class="mt-24">
-                            <h4 class="section-heading">Important Conditions</h4>
-                            <ul class="bullet-list mt-8">
-                                <li>Valid driving licence required at time of incident</li>
-                                <li>Incident must occur within active policy period</li>
-                                <li>Required evidence and police FIR must be provided for collision claims</li>
-                            </ul>
-                        </div>
-
-                        <div class="mt-24">
-                            <button class="btn-secondary" onclick="navigateTo('policy-details')">View Policy Details →</button>
+                            <button class="btn-secondary" onclick="navigateTo('policy-details')">View Complete Policy Terms & Clauses →</button>
                         </div>
                     </div>
                 </div>
@@ -676,7 +722,7 @@
                 <!-- ========================================== -->
                 <!-- 07. POLICY DETAILS VIEW                    -->
                 <!-- ========================================== -->
-                <div id="view-policy-details" class="content-view hidden">
+                <div id="view-policy-details"  class="content-view hidden">
                     <div class="card-enterprise">
                         <div class="card-header-flex">
                             <div>
@@ -966,7 +1012,7 @@
                     <div class="step-item active" id="step-pill-1">1 Claim Type</div>
                     <div class="step-item" id="step-pill-2">2 Details</div>
                     <div class="step-item" id="step-pill-3">3 Documents</div>
-                    <div class="step-item" id="step-pill-4">4 AI Check</div>
+                    <div class="step-item" id="step-pill-4">4 Review & Checks</div>
                 </div>
 
                 <!-- STEP 1: CLAIM TYPE -->
@@ -976,38 +1022,59 @@
                         <div class="claim-type-card active" onclick="selectClaimType('accident', this)">
                             <div class="type-icon">🚗</div>
                             <strong>Accident Claim</strong>
-                            <span>Collision, vehicle damage or repair estimate</span>
+                            <span>Collision, vehicle damage, or repair estimate</span>
                         </div>
                         <div class="claim-type-card" onclick="selectClaimType('theft', this)">
-                            <div class="type-icon">🔒</div>
+                            <div class="type-icon">🔍</div>
                             <strong>Theft Claim</strong>
                             <span>Stolen vehicle or missing component claim</span>
                         </div>
                     </div>
+
+                    <!-- UPFRONT DOCUMENT CHECKLIST PREVIEW -->
+                    <div id="type-checklist-preview" class="card-enterprise sub-card mt-16" style="padding:16px;">
+                        <div style="font-weight:600; font-size:13px; color:var(--text-primary); margin-bottom:8px;">Required Documents for Accident Claim:</div>
+                        <div style="display:flex; flex-direction:column; gap:6px; font-size:12px; color:var(--text-secondary);">
+                            <div>✓ <strong>Signed Claim Form</strong> (Incident summary & declaration)</div>
+                            <div>✓ <strong>Repair Estimate / Final Invoice</strong> (Itemized workshop parts & labor)</div>
+                            <div>✓ <strong>Registration Certificate (RC)</strong> (Vehicle ownership verification)</div>
+                            <div>✓ <strong>Driving Licence</strong> (Driver eligibility verification under Clause 5.1)</div>
+                        </div>
+                    </div>
+
                     <div class="form-actions-right mt-24">
                         <button class="btn-primary" onclick="goToClaimStep(2)">Next: Incident Details →</button>
                     </div>
                 </div>
 
-                <!-- STEP 2: INCIDENT DETAILS -->
+                <!-- STEP 2: INCIDENT DETAILS WITH INLINE VALIDATION -->
                 <div id="claim-step-2" class="claim-step-panel hidden">
                     <h4 class="section-heading mb-16">Incident Details</h4>
+                    
                     <div class="field-group">
-                        <label class="field-label">Incident Date</label>
-                        <input type="date" id="claim-input-date" class="input-field" value="2026-08-21">
+                        <label class="field-label">Incident Date *</label>
+                        <input type="date" id="claim-input-date" class="input-field" value="2026-08-21" max="2026-12-31">
+                        <span id="val-err-date" class="val-error-msg hidden" style="color:var(--danger); font-size:11px; margin-top:4px; display:block;"></span>
                     </div>
+
                     <div class="field-group mt-12">
-                        <label class="field-label">Incident Location</label>
-                        <input type="text" id="claim-input-location" class="input-field" placeholder="e.g. Mount Road, Chennai">
+                        <label class="field-label">Incident Location *</label>
+                        <input type="text" id="claim-input-location" class="input-field" value="Mount Road, Chennai" placeholder="e.g. Mount Road, Chennai">
+                        <span id="val-err-location" class="val-error-msg hidden" style="color:var(--danger); font-size:11px; margin-top:4px; display:block;"></span>
                     </div>
+
                     <div class="field-group mt-12">
-                        <label class="field-label">Vehicle Registration Number</label>
-                        <input type="text" id="claim-input-vehicle" class="input-field" value="TN00DM2026">
+                        <label class="field-label">Vehicle Registration Number *</label>
+                        <input type="text" id="claim-input-vehicle" class="input-field" value="TN00DM2026" placeholder="e.g. TN00DM2026">
+                        <span id="val-err-vehicle" class="val-error-msg hidden" style="color:var(--danger); font-size:11px; margin-top:4px; display:block;"></span>
                     </div>
+
                     <div class="field-group mt-12">
-                        <label class="field-label">Estimated Claim Amount (₹)</label>
-                        <input type="number" id="claim-input-amount" class="input-field" value="48750">
+                        <label class="field-label">Estimated Claim Amount (₹) *</label>
+                        <input type="number" id="claim-input-amount" class="input-field" value="48750" min="1000" max="800000">
+                        <span id="val-err-amount" class="val-error-msg hidden" style="color:var(--danger); font-size:11px; margin-top:4px; display:block;"></span>
                     </div>
+
                     <div class="form-actions-right mt-24">
                         <button class="btn-secondary" onclick="goToClaimStep(1)">Back</button>
                         <button class="btn-primary" onclick="goToClaimStep(3)">Next: Upload Documents →</button>
@@ -1026,8 +1093,8 @@
                     <div class="demo-try-section mt-16">
                         <span class="demo-try-label">OR TRY A SAMPLE CLAIM</span>
                         <div class="demo-try-buttons">
-                            <button class="btn-demo-pill approve" onclick="runDemoClaimFromModal('claim_001_approve')">Sample 1: Standard Accident</button>
-                            <button class="btn-demo-pill request" onclick="runDemoClaimFromModal('claim_002_request_information')">Sample 2: Missing DL</button>
+                            <button class="btn-demo-pill approve" onclick="runDemoClaimFromModal('claim_001_approve')">Sample 1: Standard Accident (Pass)</button>
+                            <button class="btn-demo-pill request" onclick="runDemoClaimFromModal('claim_002_request_information')">Sample 2: Missing DL (Pending)</button>
                         </div>
                     </div>
                     <div class="form-actions-right mt-24">
@@ -1042,7 +1109,7 @@
     <!-- ========================================== -->
     <!-- DEDICATED UPLOAD DOCUMENT MODAL            -->
     <!-- ========================================== -->
-    <div id="modal-upload-document" class="modal-overlay hidden">
+    <div id="modal-upload-document"  class="modal-overlay hidden">
         <div class="modal-card-ent max-w-540">
             <div class="modal-header">
                 <div>

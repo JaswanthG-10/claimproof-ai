@@ -252,3 +252,29 @@ def test_real_document_upload_pipeline():
         # Clean up test directory
         if os.path.exists(test_dir):
             shutil.rmtree(test_dir)
+
+
+def test_special_character_filename_upload():
+    """
+    Test uploading a document with special characters in the filename (<, >, &, quotes).
+    Ensures safe filename sanitization without crash and valid review return.
+    """
+    special_name = "Driving_Licence_<test>&'quoted'.pdf"
+    content = b"%PDF-1.4 Mock Driving Licence content for Jaswanth G. DL-TN-2026-99 Valid."
+    
+    # 1. Verify sanitization
+    safe_name = validate_file_upload(special_name, content)
+    assert "<" not in safe_name
+    assert ">" not in safe_name
+    assert "&" not in safe_name
+    assert "'" not in safe_name
+    assert safe_name.endswith(".pdf")
+
+    # 2. Verify endpoint processes upload safely
+    files = {"file": (special_name, content, "application/pdf")}
+    res = client.post("/api/claims/claim_001_approve/documents", files=files)
+    assert res.status_code == 200
+    data = res.json()
+    assert "claim_id" in data
+    assert data["claim_id"] == "claim_001_approve"
+    assert "recommendation" in data

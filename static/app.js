@@ -2,6 +2,27 @@
 // CLAIMPROOF AI - CUSTOMER SAAS CONTROLLER
 // ==========================================
 
+// Global Safe HTML Sanitization Utility
+function escapeHtml(str) {
+    if (str == null) return "";
+    return String(str)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+}
+
+function escapeJsStr(str) {
+    if (!str) return '';
+    return String(str).replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '\\"').replace(/\n/g, '\\n');
+}
+
+function formatDocName(doc) {
+    if (!doc) return 'Document';
+    return String(doc).replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
+}
+
 const state = {
     currentView: 'dashboard',
     sidebarCollapsed: false,
@@ -20,7 +41,8 @@ const state = {
     claimStep: 1,
     selectedType: 'accident',
     selectedUploadFile: null,
-    isTransitioning: false
+    isTransitioning: false,
+    documentStatuses: {}, // Per-document status: { [doc]: { status: 'Verified' | 'Needs Review' | 'Failed', error?: string } }
 };
 
 // Initial Setup
@@ -426,7 +448,89 @@ function closeStartClaimModal() {
     document.getElementById('modal-start-claim')?.classList.add('hidden');
 }
 
+function validateClaimDetails() {
+    let isValid = true;
+
+    // Reset error messages
+    document.querySelectorAll('.val-error-msg').forEach(el => {
+        el.innerText = '';
+        el.classList.add('hidden');
+    });
+
+    const vehicleInput = document.getElementById('claim-input-vehicle');
+    const dateInput = document.getElementById('claim-input-date');
+    const locationInput = document.getElementById('claim-input-location');
+    const amountInput = document.getElementById('claim-input-amount');
+
+    // 1. Vehicle Registration Validation
+    const vehicleVal = (vehicleInput?.value || '').trim().replace(/\s+/g, '').toUpperCase();
+    const vehicleRegex = /^[A-Z]{2}[0-9]{1,2}[A-Z]{0,3}[0-9]{4}$/;
+    if (!vehicleVal || !vehicleRegex.test(vehicleVal)) {
+        const errEl = document.getElementById('val-err-vehicle');
+        if (errEl) {
+            errEl.innerText = 'Please enter a valid registration format (e.g. TN00DM2026 or KA01MJ4921).';
+            errEl.classList.remove('hidden');
+        }
+        isValid = false;
+    }
+
+    // 2. Incident Date Validation (not in the future)
+    const dateVal = dateInput?.value;
+    if (!dateVal) {
+        const errEl = document.getElementById('val-err-date');
+        if (errEl) {
+            errEl.innerText = 'Please specify the incident date.';
+            errEl.classList.remove('hidden');
+        }
+        isValid = false;
+    } else {
+        const selectedDate = new Date(dateVal);
+        const today = new Date();
+        today.setHours(23, 59, 59, 999);
+        if (selectedDate > today) {
+            const errEl = document.getElementById('val-err-date');
+            if (errEl) {
+                errEl.innerText = 'Incident date cannot be in the future.';
+                errEl.classList.remove('hidden');
+            }
+            isValid = false;
+        }
+    }
+
+    // 3. Incident Location
+    const locVal = (locationInput?.value || '').trim();
+    if (!locVal) {
+        const errEl = document.getElementById('val-err-location');
+        if (errEl) {
+            errEl.innerText = 'Please provide incident location or road details.';
+            errEl.classList.remove('hidden');
+        }
+        isValid = false;
+    }
+
+    // 4. Claim Amount
+    const amtVal = Number(amountInput?.value || 0);
+    if (amtVal <= 0 || amtVal > 800000) {
+        const errEl = document.getElementById('val-err-amount');
+        if (errEl) {
+            errEl.innerText = 'Claimed amount must be between ₹1,000 and the IDV limit of ₹8,00,000.';
+            errEl.classList.remove('hidden');
+        }
+        isValid = false;
+    }
+
+    return isValid;
+}
+
 function goToClaimStep(stepNumber) {
+    // If advancing from step 2 to step 3, validate inputs first
+    if (state.claimStep === 2 && stepNumber > 2) {
+        if (!validateClaimDetails()) {
+            showToast('Validation Error', 'Please correct the highlighted fields before proceeding.', 'warning');
+            return;
+        }
+    }
+
     state.claimStep = stepNumber;
     for (let i = 1; i <= 4; i++) {
         const stepPanel = document.getElementById(`claim-step-${i}`);
@@ -436,8 +540,13 @@ function goToClaimStep(stepNumber) {
             else stepPanel.classList.add('hidden');
         }
         if (pill) {
-            if (i === stepNumber) pill.classList.add('active');
-            else pill.classList.remove('active');
+            if (i < stepNumber) {
+                pill.className = 'step-item complete';
+            } else if (i === stepNumber) {
+                pill.className = 'step-item active';
+            } else {
+                pill.className = 'step-item';
+            }
         }
     }
 }
@@ -446,6 +555,31 @@ function selectClaimType(type, element) {
     state.selectedType = type;
     document.querySelectorAll('.claim-type-card').forEach(c => c.classList.remove('active'));
     element?.classList.add('active');
+
+    // Update upfront document checklist preview
+    const previewContainer = document.getElementById('type-checklist-preview');
+    if (previewContainer) {
+        if (type === 'accident') {
+            previewContainer.innerHTML = `
+                <div style="font-weight:600; font-size:13px; color:var(--text-primary); margin-bottom:8px;">Required Documents for Accident Claim:</div>
+                <div style="display:flex; flex-direction:column; gap:6px; font-size:12px; color:var(--text-secondary);">
+                    <div>✓ <strong>Signed Claim Form</strong> (Incident summary & declaration)</div>
+                    <div>✓ <strong>Repair Estimate / Final Invoice</strong> (Itemized workshop parts & labor)</div>
+                    <div>✓ <strong>Registration Certificate (RC)</strong> (Vehicle ownership verification)</div>
+                    <div>✓ <strong>Driving Licence</strong> (Driver eligibility verification under Clause 5.1)</div>
+                </div>
+            `;
+        } else {
+            previewContainer.innerHTML = `
+                <div style="font-weight:600; font-size:13px; color:var(--text-primary); margin-bottom:8px;">Required Documents for Theft Claim:</div>
+                <div style="display:flex; flex-direction:column; gap:6px; font-size:12px; color:var(--text-secondary);">
+                    <div>✓ <strong>Signed Claim Form</strong> (Theft details & loss statement)</div>
+                    <div>✓ <strong>Police First Information Report (FIR)</strong> (Mandatory under Clause 3.1)</div>
+                    <div>✓ <strong>Registration Certificate (RC)</strong> (Original ownership document)</div>
+                </div>
+            `;
+        }
+    }
 }
 
 async function submitNewClaimForm() {
@@ -704,20 +838,68 @@ function escapeJsStr(str) {
 function renderWorkspace(claim) {
     if (!claim) return;
 
-    // Header info
+    // Header info & Claim-Level Status Derivation
     document.getElementById('ws-claim-id').innerText = claim.claim_id;
     document.getElementById('ws-incident-badge').innerText = claim.incident_type ? claim.incident_type.charAt(0).toUpperCase() + claim.incident_type.slice(1) : 'Accident';
 
     const statusBadge = document.getElementById('ws-status-badge');
-    const recType = (claim.recommendation || 'APPROVE').toUpperCase();
-    statusBadge.innerHTML = `<span class="badge-icon-symbol">${getStatusSymbol(recType)}</span> ${claim.recommendation_label || formatRecText(recType)}`;
-    statusBadge.className = `badge-status ${getBadgeClass(recType)}`;
-
-    // Left Panel: Documents & Evidence (Available vs Missing)
-    const reqDocs = claim.completeness?.required_documents || ['claim_form', 'repair_estimate', 'registration_certificate', 'driving_licence'];
+    const statusSubtitle = document.getElementById('ws-status-subtitle');
     const missingDocs = claim.completeness?.missing_documents || [];
-    const availableDocs = reqDocs.filter(d => !missingDocs.includes(d));
+    const isComplete = claim.completeness?.is_complete ?? (missingDocs.length === 0);
+    const recType = (claim.recommendation || 'APPROVE').toUpperCase();
 
+    // Derive claim-level status
+    let derivedStatusLabel = '';
+    let derivedSubtitle = '';
+    let derivedBadgeClass = '';
+    let derivedSymbol = '';
+
+    if (!isComplete && missingDocs.length > 0) {
+        derivedStatusLabel = 'DOCUMENTS PENDING';
+        derivedSubtitle = `Action required: ${missingDocs.length} mandatory document(s) pending upload before final review.`;
+        derivedBadgeClass = 'badge-status request';
+        derivedSymbol = '!';
+    } else if (recType === 'APPROVE') {
+        derivedStatusLabel = 'CLAIM APPROVED';
+        derivedSubtitle = 'All required documents verified with valid policy coverage and no contradictions.';
+        derivedBadgeClass = 'badge-status approve';
+        derivedSymbol = '✓';
+    } else if (recType === 'REQUEST_INFORMATION') {
+        derivedStatusLabel = 'INFORMATION REQUESTED';
+        derivedSubtitle = 'Additional information or document clarification needed before submission.';
+        derivedBadgeClass = 'badge-status request';
+        derivedSymbol = '!';
+    } else if (recType === 'ESCALATE') {
+        derivedStatusLabel = 'UNDER REVIEW / ESCALATED';
+        derivedSubtitle = 'Cross-document inconsistency detected requiring manual officer clarification.';
+        derivedBadgeClass = 'badge-status escalate';
+        derivedSymbol = '✦';
+    } else if (recType === 'REJECT') {
+        derivedStatusLabel = 'POLICY EXCLUSION DETECTED';
+        derivedSubtitle = 'A specific policy exclusion or limit violation was identified during evaluation.';
+        derivedBadgeClass = 'badge-status reject';
+        derivedSymbol = '✗';
+    } else {
+        derivedStatusLabel = formatRecText(recType);
+        derivedSubtitle = 'Preliminary AI evidence assessment.';
+        derivedBadgeClass = `badge-status ${getBadgeClass(recType)}`;
+        derivedSymbol = getStatusSymbol(recType);
+    }
+
+    if (statusBadge) {
+        statusBadge.innerHTML = `<span class="badge-icon-symbol">${derivedSymbol}</span> ${derivedStatusLabel}`;
+        statusBadge.className = derivedBadgeClass;
+    }
+    if (statusSubtitle) {
+        statusSubtitle.innerText = derivedSubtitle;
+    }
+
+    // Left Panel: Documents & Evidence (Available vs Missing with Per-Document Status)
+    const reqDocs = claim.completeness?.required_documents || (claim.incident_type === 'theft' 
+        ? ['claim_form', 'fir', 'registration_certificate'] 
+        : ['claim_form', 'repair_estimate', 'registration_certificate', 'driving_licence']);
+    
+    const availableDocs = reqDocs.filter(d => !missingDocs.includes(d));
     const missingList = document.getElementById('ws-doc-missing-list');
     const availList = document.getElementById('ws-doc-available-list');
     if (missingList) missingList.innerHTML = '';
@@ -732,28 +914,41 @@ function renderWorkspace(claim) {
     if (availList) {
         const policyRow = document.createElement('div');
         policyRow.className = 'doc-status-row positive';
-        policyRow.style.padding = '8px 12px';
+        policyRow.style.padding = '10px 12px';
         policyRow.style.background = 'var(--surface-2)';
-        policyRow.style.borderRadius = '6px';
+        policyRow.style.borderRadius = '8px';
         policyRow.style.marginTop = '6px';
         policyRow.style.fontSize = '13px';
         policyRow.style.fontWeight = '500';
         policyRow.style.cursor = 'pointer';
-        policyRow.innerHTML = `<span style="color:var(--success);">✓ Policy Schedule (Active POL-2026-104)</span>`;
+        policyRow.innerHTML = `
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <span style="color:var(--success);">✓ Policy Schedule</span>
+                <span class="status-badge approve" style="font-size:10px; padding:2px 6px;">Active POL-2026-104</span>
+            </div>
+        `;
         policyRow.onclick = () => navigateTo('policies');
         availList.appendChild(policyRow);
 
         availableDocs.forEach(doc => {
             const div = document.createElement('div');
             div.className = 'doc-status-row positive';
-            div.style.padding = '8px 12px';
+            div.style.padding = '10px 12px';
             div.style.background = 'var(--surface-2)';
-            div.style.borderRadius = '6px';
+            div.style.borderRadius = '8px';
             div.style.marginTop = '6px';
             div.style.fontSize = '13px';
             div.style.fontWeight = '500';
             div.style.cursor = 'pointer';
-            div.innerHTML = `<span style="color:var(--success);">✓ ${formatDocName(doc)}</span>`;
+
+            const docState = (state.documentStatuses && state.documentStatuses[doc]) ? state.documentStatuses[doc].status : 'Verified';
+            
+            div.innerHTML = `
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <span style="color:var(--success);">✓ ${formatDocName(doc)}</span>
+                    <span class="status-badge approve" style="font-size:10px; padding:2px 6px;">${docState}</span>
+                </div>
+            `;
             
             const matchingEvidence = claim.evidence_items?.find(e => e.source_document && e.source_document.toLowerCase().includes(doc.toLowerCase()));
             const previewText = matchingEvidence?.raw_text || `Document: ${formatDocName(doc)}\nVerified against active policy POL-2026-104.\nStatus: Authentic and complete.`;
@@ -762,28 +957,42 @@ function renderWorkspace(claim) {
         });
     }
 
-    // Render Missing Documents
+    // Render Missing Documents with Direct Upload CTA & Inline Failure Reason
     if (missingList) {
         if (missingDocs.length > 0) {
             missingDocs.forEach(doc => {
                 const div = document.createElement('div');
                 div.className = 'doc-status-row warning';
-                div.style.padding = '8px 12px';
-                div.style.background = 'rgba(245, 158, 11, 0.12)';
-                div.style.border = '1px solid rgba(245, 158, 11, 0.3)';
-                div.style.borderRadius = '6px';
-                div.style.marginTop = '6px';
+                div.style.padding = '10px 12px';
+                div.style.background = 'rgba(245, 158, 11, 0.1)';
+                div.style.border = '1px solid rgba(245, 158, 11, 0.28)';
+                div.style.borderRadius = '8px';
+                div.style.marginTop = '8px';
                 div.style.fontSize = '13px';
-                div.style.fontWeight = '600';
-                div.style.cursor = 'pointer';
-                div.title = 'Click to upload this document';
-                div.innerHTML = `
-                    <div style="display:flex; justify-content:space-between; align-items:center;">
-                        <span style="color:var(--warning);">! ${formatDocName(doc)}</span>
-                        <span style="font-size:11px; text-decoration:underline; color:var(--primary);">Upload +</span>
-                    </div>
-                `;
-                div.onclick = () => openUploadDocumentModal(doc);
+
+                const docFailure = (state.documentStatuses && state.documentStatuses[doc]?.status === 'Failed') 
+                    ? state.documentStatuses[doc] 
+                    : null;
+
+                if (docFailure) {
+                    div.style.background = 'rgba(244, 63, 94, 0.1)';
+                    div.style.borderColor = 'rgba(244, 63, 94, 0.35)';
+                    div.innerHTML = `
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <span style="color:var(--danger); font-weight:600;">✗ ${formatDocName(doc)}</span>
+                            <button class="btn-primary" style="padding:3px 8px; font-size:11px;" onclick="openUploadDocumentModal('${doc}')">Try Again ↻</button>
+                        </div>
+                        <div style="font-size:11px; color:var(--danger); margin-top:4px;">Failed: ${escapeHtml(docFailure.error || 'Extraction error')}</div>
+                    `;
+                } else {
+                    div.innerHTML = `
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <span style="color:var(--warning); font-weight:600;">! ${formatDocName(doc)}</span>
+                            <button class="btn-primary" style="padding:4px 10px; font-size:11px;" onclick="openUploadDocumentModal('${doc}')">Upload +</button>
+                        </div>
+                        <div style="font-size:11px; color:var(--text-muted); margin-top:4px;">Required for claim completeness</div>
+                    `;
+                }
                 missingList.appendChild(div);
             });
         } else {
@@ -977,7 +1186,7 @@ function renderWorkspace(claim) {
     const recExplanationEl = document.getElementById('ws-rec-explanation');
     const recGuidanceEl = document.getElementById('ws-rec-guidance');
 
-    if (recTitleEl) recTitleEl.innerText = claim.recommendation_label || formatRecText(recType);
+    if (recTitleEl) recTitleEl.innerText = derivedStatusLabel;
 
     if (claim.explanation) {
         if (recSummaryEl) recSummaryEl.innerText = claim.explanation.split('\n')[0];
@@ -1399,7 +1608,6 @@ function renderPolicyLibrary() {
     const filtered = clauseSource.filter(c => {
         const cat = c.category.toLowerCase();
         
-        // Category Filter Match
         let catMatch = false;
         if (filter === 'all') catMatch = true;
         else if (filter === 'coverage' && cat === 'coverage') catMatch = true;
@@ -1409,53 +1617,76 @@ function renderPolicyLibrary() {
 
         if (!catMatch) return false;
 
-        // Search Query Match
         if (query) {
             const searchable = `${c.clause_id} ${c.clause_title} ${c.clause_text} ${c.reasoning} ${c.category}`.toLowerCase();
             return searchable.includes(query);
         }
-
         return true;
     });
 
     if (filtered.length === 0) {
         grid.innerHTML = `
             <div class="card-enterprise sub-card" style="text-align:center; padding:32px;">
-                <p class="body-text">No policy clauses matched your search query "<strong>${state.policySearchQuery}</strong>".</p>
+                <p class="body-text">No policy clauses matched your search query "<strong>${escapeHtml(state.policySearchQuery)}</strong>".</p>
                 <button class="btn-secondary mt-12" onclick="document.getElementById('policy-library-search').value = ''; state.policySearchQuery = ''; renderPolicyLibrary();">Clear Search</button>
             </div>
         `;
         return;
     }
 
+    // Check clauses referenced in active claim
+    const activeClaim = state.activeClaim;
+    const activeCitedClauses = new Set();
+    if (activeClaim) {
+        (activeClaim.findings || []).forEach(f => {
+            if (f.policy_clause) activeCitedClauses.add(f.policy_clause.toLowerCase());
+        });
+        (activeClaim.policy_assessments || []).forEach(pa => {
+            if (pa.clause_id) activeCitedClauses.add(pa.clause_id.toLowerCase());
+        });
+    }
+
     filtered.forEach(c => {
         const catClass = `cat-${c.category.toLowerCase()}`;
         const div = document.createElement('div');
-        div.className = `policy-card-cat ${catClass}`;
         
+        const isCited = activeCitedClauses.has(c.clause_id.toLowerCase());
+        div.className = `policy-card-cat ${catClass}` + (isCited ? ' policy-referenced' : '');
+        
+        let catBadge = c.category.replace('_', ' ').toUpperCase();
+        let catIcon = '📑';
+        if (c.category.toLowerCase() === 'coverage') catIcon = '🛡️';
+        else if (c.category.toLowerCase() === 'exclusions') catIcon = '🚫';
+        else if (c.category.toLowerCase() === 'idv') catIcon = '⚖️';
+
+        let citedBadgeHtml = isCited 
+            ? `<span class="badge-status approve" style="font-size:11px; padding:3px 8px;"><span class="badge-icon-symbol">★</span> CITED IN ACTIVE CLAIM</span>`
+            : '';
+
         div.innerHTML = `
-            <div class="policy-card-header">
-                <div class="policy-title-group">
-                    <span class="policy-cat-icon">${c.icon}</span>
-                    <div>
-                        <span class="policy-clause-num">${c.clause_id} · ${c.clause_title}</span>
-                    </div>
+            <div class="policy-card-header" style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:12px;">
+                <div>
+                    <span class="policy-cat-badge ${catClass}" style="font-size:11px; padding:3px 8px; border-radius:4px; font-weight:600; text-transform:uppercase;">${catIcon} ${catBadge}</span>
+                    <h4 class="policy-clause-title" style="margin-top:8px; font-size:16px; font-weight:700; color:var(--text-primary);">${escapeHtml(c.clause_id)} — ${escapeHtml(c.clause_title)}</h4>
                 </div>
-                <span class="policy-cat-badge ${catClass}">${c.category.replace('_', ' ')}</span>
+                ${citedBadgeHtml}
             </div>
-            <p class="policy-clause-desc">"${c.clause_text}"</p>
-            <div class="policy-impact-box">
-                <strong>How this affects your claim:</strong>
-                <span>${c.reasoning}</span>
+            
+            <p class="policy-clause-desc" style="font-size:14.5px; line-height:1.65; color:var(--text-secondary); margin-bottom:14px;">"${escapeHtml(c.clause_text)}"</p>
+            
+            <div class="policy-impact-box" style="background:var(--surface-1); border:1px solid var(--border); border-radius:8px; padding:12px 16px;">
+                <strong style="color:var(--text-primary); font-size:13px;">How this affects your claim:</strong>
+                <p class="body-text" style="font-size:13.5px; margin-top:4px; line-height:1.5;">${escapeHtml(c.reasoning)}</p>
             </div>
-            <div class="mt-12" style="display:flex; justify-content:flex-end;">
-                <button class="btn-tertiary-link" onclick="openPolicyDrawer(${JSON.stringify(c).replace(/"/g, '&quot;')})">View Original Clause Details →</button>
+            
+            <div class="mt-14" style="display:flex; justify-content:space-between; align-items:center;">
+                <span class="clause-citation-tag">⚖ Policy Document POL-2026-104 (Page ${c.page || 1})</span>
+                <button class="btn-tertiary-link" onclick="openPolicyDrawer(${JSON.stringify(c).replace(/"/g, '&quot;')})">View Full Policy Terms →</button>
             </div>
         `;
         grid.appendChild(div);
     });
 }
-
 
 /* ========================================== */
 /* SETTINGS: PROFILE & NOTIFICATION PREFS     */
@@ -1710,15 +1941,20 @@ async function startDocumentUploadProcess() {
     const claim = state.activeClaim || (state.claimsList.length > 0 ? state.claimsList[0] : null);
     const claimId = claim ? claim.claim_id : 'CLM-CUSTOM-001';
     const file = state.selectedUploadFile;
+    const docTypeSelect = document.getElementById('upload-doc-type-select');
+    const docType = docTypeSelect ? docTypeSelect.value : 'claim_evidence';
 
     if (!file) {
         showToast('Selection Required', 'Please select a file to upload.', 'warning');
         return;
     }
 
+    console.log(`[ClaimProof Pipeline] Step 1: Initiating upload of '${file.name}' (${docType}) for claim '${claimId}'`);
+
     // Switch UI to progress state
     document.getElementById('upload-state-idle')?.classList.add('hidden');
     document.getElementById('upload-state-progress')?.classList.remove('hidden');
+    document.getElementById('upload-state-error')?.classList.add('hidden');
 
     const progressBar = document.getElementById('upload-progress-bar-fill');
     const progressPercent = document.getElementById('upload-progress-percent');
@@ -1728,38 +1964,59 @@ async function startDocumentUploadProcess() {
     const step3 = document.getElementById('ustep-3');
     const step4 = document.getElementById('ustep-4');
 
-    if (progressBar) progressBar.style.width = '30%';
-    if (progressPercent) progressPercent.innerText = '30%';
-    if (headline) headline.innerText = 'Uploading Document...';
+    if (progressBar) progressBar.style.width = '25%';
+    if (progressPercent) progressPercent.innerText = '25%';
+    if (headline) headline.innerText = 'Stage 1/4: Uploading Document securely...';
     if (step1) step1.className = 'mini-step active';
 
+    let currentStage = "Network Upload";
+
     try {
+        // Stage 1: Network File Upload
+        currentStage = "File Upload";
         const formData = new FormData();
         formData.append('file', file);
 
+        console.log(`[ClaimProof Pipeline] Stage: Sending file payload to backend endpoint`);
         if (step1) step1.className = 'mini-step complete';
         if (step2) step2.className = 'mini-step active';
-        if (progressBar) progressBar.style.width = '60%';
-        if (progressPercent) progressPercent.innerText = '60%';
-        if (headline) headline.innerText = 'Analyzing Evidence & Verifying Policy...';
+        if (progressBar) progressBar.style.width = '50%';
+        if (progressPercent) progressPercent.innerText = '50%';
+        if (headline) headline.innerText = 'Stage 2/4: Extracting Text & OCR Parsing...';
 
         const res = await fetch('/api/claims/' + encodeURIComponent(claimId) + '/documents', {
             method: 'POST',
             body: formData
+        }).catch(err => {
+            throw new Error(`Network connection error during file upload: ${err.message}`);
         });
 
         if (!res.ok) {
             const errData = await res.json().catch(() => ({}));
-            throw new Error(errData.detail || 'Server returned error ' + res.status);
+            throw new Error(errData.detail || `Server error during upload (HTTP ${res.status})`);
         }
 
+        // Stage 3: Parsing & Field Extraction
+        currentStage = "Evidence Extraction & Normalization";
+        console.log(`[ClaimProof Pipeline] Stage: Document received by server, processing evidence`);
         if (step2) step2.className = 'mini-step complete';
+        if (step3) step3.className = 'mini-step active';
+        if (progressBar) progressBar.style.width = '75%';
+        if (progressPercent) progressPercent.innerText = '75%';
+        if (headline) headline.innerText = 'Stage 3/4: Cross-Document Consistency & Policy Gate Evaluation...';
+
+        const updatedClaim = await res.json().catch(err => {
+            throw new Error(`Failed to decode server analysis response: ${err.message}`);
+        });
+
+        // Stage 4: Recommendation Engine & Status Derivation
+        currentStage = "Recommendation Derivation";
+        console.log(`[ClaimProof Pipeline] Stage: Evaluating recommendation gates for claim ${updatedClaim.claim_id}`);
         if (step3) step3.className = 'mini-step complete';
         if (step4) step4.className = 'mini-step complete';
         if (progressBar) progressBar.style.width = '100%';
         if (progressPercent) progressPercent.innerText = '100%';
-
-        const updatedClaim = await res.json();
+        if (headline) headline.innerText = 'Stage 4/4: Complete! Updating Claim Readiness...';
 
         // Update active claim and list with real server response
         state.activeClaim = updatedClaim;
@@ -1767,13 +2024,17 @@ async function startDocumentUploadProcess() {
         if (idx >= 0) state.claimsList[idx] = updatedClaim;
         else state.claimsList.unshift(updatedClaim);
 
+        // Record per-document verified status
+        state.documentStatuses = state.documentStatuses || {};
+        state.documentStatuses[docType] = { status: 'Verified', filename: file.name, error: null };
+
         // Add real uploaded document to state documentsList
         state.documentsList.push({
             name: file.name,
-            type: updatedClaim.incident_type || 'Claim Evidence',
+            type: formatDocName(docType),
             claimId: updatedClaim.claim_id,
             date: new Date().toISOString().split('T')[0],
-            status: updatedClaim.recommendation === 'APPROVE' ? 'Verified' : 'Under Review'
+            status: 'Verified'
         });
 
         // Re-render UI components with real server data
@@ -1783,6 +2044,7 @@ async function startDocumentUploadProcess() {
         renderClaimsTable();
         renderDocumentsTable();
         renderMissingDocumentsView();
+        renderCoverageView();
 
         // Switch to Success State
         document.getElementById('upload-state-progress')?.classList.add('hidden');
@@ -1792,18 +2054,35 @@ async function startDocumentUploadProcess() {
         if (successMsg) {
             const missingCount = updatedClaim.completeness?.missing_documents?.length || 0;
             const recLabel = updatedClaim.recommendation_label || formatRecText(updatedClaim.recommendation);
-            const statusDetail = missingCount === 0 ? 'All Documents Available' : missingCount + ' document(s) pending';
-            successMsg.innerHTML = '<strong>' + escapeHtml(file.name) + '</strong> has been processed. Readiness: <strong>' + recLabel + '</strong> (' + statusDetail + ').';
+            const statusDetail = missingCount === 0 
+                ? '<span style="color:var(--success); font-weight:600;">All Required Documents Verified</span>' 
+                : `<span style="color:var(--warning); font-weight:600;">${missingCount} document(s) still pending</span>`;
+            
+            successMsg.innerHTML = `
+                <div>Document <strong>${escapeHtml(file.name)}</strong> has been verified.</div>
+                <div style="margin-top:6px;">Claim Status: <strong>${escapeHtml(recLabel)}</strong> (${statusDetail})</div>
+            `;
         }
 
-        showToast('Document Uploaded', 'Claim ' + updatedClaim.claim_id + ' re-analyzed: ' + updatedClaim.recommendation, 'success');
+        showToast('Document Verified', `${formatDocName(docType)} added. Claim: ${updatedClaim.recommendation}`, 'success');
 
     } catch (err) {
+        console.error(`[ClaimProof Pipeline Failure] at [${currentStage}]:`, err);
+        
+        // Record per-document failure
+        state.documentStatuses = state.documentStatuses || {};
+        state.documentStatuses[docType] = { status: 'Failed', filename: file.name, error: err.message };
+
         document.getElementById('upload-state-progress')?.classList.add('hidden');
         document.getElementById('upload-state-error')?.classList.remove('hidden');
         const errMsg = document.getElementById('upload-error-message');
-        if (errMsg) errMsg.innerText = 'Upload or analysis failed: ' + err.message;
-        showToast('Upload Error', err.message, 'error');
+        if (errMsg) {
+            errMsg.innerHTML = `<strong>${escapeHtml(currentStage)} Failed:</strong> ${escapeHtml(err.message)}`;
+        }
+        showToast('Upload Error', `${currentStage}: ${err.message}`, 'error');
+        
+        // Re-render workspace to reflect document failure state
+        if (state.activeClaim) renderWorkspace(state.activeClaim);
     }
 }
 
@@ -1951,4 +2230,46 @@ function showToast(title, message, type = 'info') {
         toast.style.opacity = '0';
         setTimeout(() => toast.remove(), 300);
     }, 4000);
+}
+
+
+function renderCoverageView() {
+    const totalIDV = 800000;
+    const approvedClaims = (state.claimsList || []).filter(c => (c.recommendation || '').toUpperCase() === 'APPROVE');
+    const approvedCount = approvedClaims.length;
+    const approvedSum = approvedClaims.reduce((sum, c) => sum + Number(c.claimed_amount || 0), 0);
+    const remainingIDV = Math.max(0, totalIDV - approvedSum);
+    const percentUsed = Math.min(100, Math.round((approvedSum / totalIDV) * 100));
+
+    const countEl = document.getElementById('cov-approved-count');
+    const sumEl = document.getElementById('cov-approved-sum');
+    const remEl = document.getElementById('cov-remaining-idv');
+    const barEl = document.getElementById('cov-idv-bar');
+    const tableBody = document.getElementById('cov-claims-table-body');
+
+    if (countEl) countEl.innerText = `${approvedCount} Approved`;
+    if (sumEl) sumEl.innerText = `₹${approvedSum.toLocaleString('en-IN')}`;
+    if (remEl) remEl.innerText = `₹${remainingIDV.toLocaleString('en-IN')}`;
+    if (barEl) barEl.style.width = `${percentUsed}%`;
+
+    if (tableBody) {
+        tableBody.innerHTML = '';
+        if (state.claimsList.length === 0) {
+            tableBody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:20px; color:var(--text-muted);">No claims registered under this policy schedule.</td></tr>';
+        } else {
+            state.claimsList.forEach(c => {
+                const tr = document.createElement('tr');
+                tr.style.cursor = 'pointer';
+                tr.onclick = () => openClaimWorkspace(c.claim_id);
+                tr.innerHTML = `
+                    <td><strong>${escapeHtml(c.claim_id)}</strong></td>
+                    <td>${escapeHtml(c.incident_date || '2026-08-21')}</td>
+                    <td>${escapeHtml(c.incident_type ? c.incident_type.toUpperCase() : 'ACCIDENT')}</td>
+                    <td>₹${Number(c.claimed_amount || 48750).toLocaleString('en-IN')}</td>
+                    <td><span class="status-badge ${getBadgeClass(c.recommendation)}"><span class="badge-icon-symbol">${getStatusSymbol(c.recommendation)}</span> ${formatRecText(c.recommendation)}</span></td>
+                `;
+                tableBody.appendChild(tr);
+            });
+        }
+    }
 }
