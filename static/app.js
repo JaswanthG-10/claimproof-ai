@@ -25,7 +25,7 @@ const state = {
 
 // Initial Setup
 document.addEventListener('DOMContentLoaded', () => {
-    initCinematicLoginScene();
+    initLoginMotion();
     initApp();
     setupEventListeners();
     setupLoginKeypressListener();
@@ -119,151 +119,177 @@ function setupEventListeners() {
 
 
 /* ========================================== */
-/* THREE.JS CINEMATIC LOGIN SCENE             */
+/* 3D MOTION & PARTICLE ENGINE FOR LOGIN      */
 /* ========================================== */
 
-let loginScene, loginCamera, loginRenderer, loginGraphGroup, loginAnimId;
+let particleCanvas, particleCtx, particleAnimId;
+let particles = [];
+let mouseX = 0, mouseY = 0, targetMouseX = 0, targetMouseY = 0;
 
-function initCinematicLoginScene() {
-    const canvas = document.getElementById('login-3d-canvas');
-    if (!canvas || typeof THREE === 'undefined') return;
+function initLoginMotion() {
+    initParticleNetwork();
+    initCardTilt();
+}
 
-    const width = window.innerWidth;
-    const height = window.innerHeight;
+function initParticleNetwork() {
+    particleCanvas = document.getElementById('login-particle-canvas') || document.getElementById('login-3d-canvas');
+    if (!particleCanvas) return;
+    particleCtx = particleCanvas.getContext('2d');
+    if (!particleCtx) return;
 
-    loginScene = new THREE.Scene();
-    loginScene.fog = new THREE.FogExp2(0x080E19, 0.03);
+    function resize() {
+        if (!particleCanvas) return;
+        particleCanvas.width = window.innerWidth;
+        particleCanvas.height = window.innerHeight;
+    }
+    resize();
+    window.addEventListener('resize', resize);
 
-    loginCamera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000);
-    loginCamera.position.z = 26;
+    particles = [];
+    const count = Math.min(75, Math.max(35, Math.floor(window.innerWidth / 18)));
+    const colors = ['rgba(99, 102, 241, ', 'rgba(6, 182, 212, ', 'rgba(129, 140, 248, '];
 
-    loginRenderer = new THREE.WebGLRenderer({ canvas: canvas, alpha: true, antialias: true });
-    loginRenderer.setSize(width, height);
-    loginRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-
-    loginGraphGroup = new THREE.Group();
-    loginScene.add(loginGraphGroup);
-
-    // Connected Network Nodes: Documents -> Evidence -> Policy -> Recommendation
-    const nodeStages = [
-        { x: -10, color: 0x38BDF8, count: 5 }, // Documents (#38BDF8)
-        { x: -3, color: 0x2563EB, count: 6 },  // Evidence (#2563EB)
-        { x: 4, color: 0x38BDF8, count: 5 },   // Policy (#38BDF8)
-        { x: 10, color: 0x2563EB, count: 4 }   // Recommendation (#2563EB)
-    ];
-
-    const nodePositions = [];
-    const sphereGeo = new THREE.SphereGeometry(0.35, 16, 16);
-
-    nodeStages.forEach(stage => {
-        const stageNodes = [];
-        for (let i = 0; i < stage.count; i++) {
-            const y = (i - (stage.count - 1) / 2) * 2.8 + (Math.random() - 0.5) * 0.5;
-            const z = (Math.random() - 0.5) * 3;
-
-            const mat = new THREE.MeshBasicMaterial({
-                color: stage.color,
-                transparent: true,
-                opacity: 0.75
-            });
-            const mesh = new THREE.Mesh(sphereGeo, mat);
-            mesh.position.set(stage.x, y, z);
-            loginGraphGroup.add(mesh);
-
-            // Subtle outer halo
-            const haloGeo = new THREE.SphereGeometry(0.65, 12, 12);
-            const haloMat = new THREE.MeshBasicMaterial({
-                color: stage.color,
-                transparent: true,
-                opacity: 0.15,
-                wireframe: true
-            });
-            const halo = new THREE.Mesh(haloGeo, haloMat);
-            halo.position.set(stage.x, y, z);
-            loginGraphGroup.add(halo);
-
-            stageNodes.push({ x: stage.x, y, z });
-        }
-        nodePositions.push(stageNodes);
-    });
-
-    // Connecting lines between stages
-    const lineMat = new THREE.LineBasicMaterial({
-        color: 0x2563EB,
-        transparent: true,
-        opacity: 0.22
-    });
-
-    for (let s = 0; s < nodePositions.length - 1; s++) {
-        const curr = nodePositions[s];
-        const next = nodePositions[s + 1];
-
-        curr.forEach(n1 => {
-            next.forEach(n2 => {
-                if (Math.random() > 0.42) return;
-                const points = [
-                    new THREE.Vector3(n1.x, n1.y, n1.z),
-                    new THREE.Vector3((n1.x + n2.x) / 2, (n1.y + n2.y) / 2 + (Math.random() - 0.5) * 1.5, (n1.z + n2.z) / 2 + (Math.random() - 0.5) * 1.5),
-                    new THREE.Vector3(n2.x, n2.y, n2.z)
-                ];
-                const curve = new THREE.CatmullRomCurve3(points);
-                const geometry = new THREE.BufferGeometry().setFromPoints(curve.getPoints(18));
-                const line = new THREE.Line(geometry, lineMat);
-                loginGraphGroup.add(line);
-            });
+    for (let i = 0; i < count; i++) {
+        particles.push({
+            x: Math.random() * (particleCanvas.width || window.innerWidth),
+            y: Math.random() * (particleCanvas.height || window.innerHeight),
+            vx: (Math.random() - 0.5) * 0.65,
+            vy: (Math.random() - 0.5) * 0.65,
+            radius: Math.random() * 2 + 1.2,
+            baseColor: colors[Math.floor(Math.random() * colors.length)],
+            alpha: Math.random() * 0.45 + 0.35,
+            pulseSpeed: Math.random() * 0.02 + 0.01,
+            pulseOffset: Math.random() * Math.PI * 2
         });
     }
 
-    // Ambient floating particles
-    const particleCount = 100;
-    const particleGeo = new THREE.BufferGeometry();
-    const posArray = new Float32Array(particleCount * 3);
-    for (let i = 0; i < particleCount * 3; i += 3) {
-        posArray[i] = (Math.random() - 0.5) * 32;
-        posArray[i + 1] = (Math.random() - 0.5) * 20;
-        posArray[i + 2] = (Math.random() - 0.5) * 14;
-    }
-    particleGeo.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
-    const particleMat = new THREE.PointsMaterial({
-        size: 0.08,
-        color: 0x38BDF8,
-        transparent: true,
-        opacity: 0.4
+    // Mouse tracking for smooth parallax
+    window.addEventListener('mousemove', (e) => {
+        targetMouseX = (e.clientX - window.innerWidth / 2) * 0.04;
+        targetMouseY = (e.clientY - window.innerHeight / 2) * 0.04;
     });
-    loginGraphGroup.add(new THREE.Points(particleGeo, particleMat));
 
-    // Handle Resize
-    window.addEventListener('resize', onLoginWindowResize);
-
-    // Respect prefers-reduced-motion
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (prefersReducedMotion) {
-        loginRenderer.render(loginScene, loginCamera);
-        return;
+
+    let time = 0;
+    function renderParticles() {
+        if (!particleCtx || !particleCanvas) return;
+        particleAnimId = requestAnimationFrame(renderParticles);
+
+        time += 0.015;
+        mouseX += (targetMouseX - mouseX) * 0.08;
+        mouseY += (targetMouseY - mouseY) * 0.08;
+
+        particleCtx.clearRect(0, 0, particleCanvas.width, particleCanvas.height);
+
+        const maxDist = 135;
+        const width = particleCanvas.width;
+        const height = particleCanvas.height;
+
+        // Proximity connecting lines
+        for (let i = 0; i < particles.length; i++) {
+            const p1 = particles[i];
+            const p1x = p1.x + mouseX * (p1.radius * 0.6);
+            const p1y = p1.y + mouseY * (p1.radius * 0.6);
+
+            for (let j = i + 1; j < particles.length; j++) {
+                const p2 = particles[j];
+                const p2x = p2.x + mouseX * (p2.radius * 0.6);
+                const p2y = p2.y + mouseY * (p2.radius * 0.6);
+
+                const dx = p1x - p2x;
+                const dy = p1y - p2y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+
+                if (dist < maxDist) {
+                    const lineAlpha = (1 - dist / maxDist) * 0.18;
+                    particleCtx.strokeStyle = `rgba(99, 102, 241, ${lineAlpha})`;
+                    particleCtx.lineWidth = 1;
+                    particleCtx.beginPath();
+                    particleCtx.moveTo(p1x, p1y);
+                    particleCtx.lineTo(p2x, p2y);
+                    particleCtx.stroke();
+                }
+            }
+        }
+
+        // Particle nodes
+        for (let i = 0; i < particles.length; i++) {
+            const p = particles[i];
+            if (!prefersReducedMotion) {
+                p.x += p.vx;
+                p.y += p.vy;
+
+                if (p.x < 0) p.x = width;
+                else if (p.x > width) p.x = 0;
+                if (p.y < 0) p.y = height;
+                else if (p.y > height) p.y = 0;
+            }
+
+            const currentAlpha = p.alpha + Math.sin(time * p.pulseSpeed * 100 + p.pulseOffset) * 0.15;
+            const px = p.x + mouseX * (p.radius * 0.6);
+            const py = p.y + mouseY * (p.radius * 0.6);
+
+            // Outer glow halo
+            const grad = particleCtx.createRadialGradient(px, py, 0, px, py, p.radius * 3.5);
+            grad.addColorStop(0, p.baseColor + Math.max(0.08, currentAlpha) + ')');
+            grad.addColorStop(1, p.baseColor + '0)');
+
+            particleCtx.fillStyle = grad;
+            particleCtx.beginPath();
+            particleCtx.arc(px, py, p.radius * 3.5, 0, Math.PI * 2);
+            particleCtx.fill();
+
+            // Core dot
+            particleCtx.fillStyle = p.baseColor + '0.9)';
+            particleCtx.beginPath();
+            particleCtx.arc(px, py, p.radius, 0, Math.PI * 2);
+            particleCtx.fill();
+        }
     }
 
-    let clock = new THREE.Clock();
-    function animate() {
-        loginAnimId = requestAnimationFrame(animate);
-        const elapsedTime = clock.getElapsedTime();
-
-        // Slow, ambient rotation & drifting
-        loginGraphGroup.rotation.y = elapsedTime * 0.035;
-        loginGraphGroup.rotation.x = Math.sin(elapsedTime * 0.2) * 0.03;
-
-        particleMat.opacity = 0.3 + Math.sin(elapsedTime * 1.2) * 0.15;
-        loginRenderer.render(loginScene, loginCamera);
-    }
-    animate();
+    renderParticles();
 }
 
-function onLoginWindowResize() {
-    if (!loginCamera || !loginRenderer) return;
-    const w = window.innerWidth;
-    const h = window.innerHeight;
-    loginCamera.aspect = w / h;
-    loginCamera.updateProjectionMatrix();
-    loginRenderer.setSize(w, h);
+function initCardTilt() {
+    const card = document.getElementById('login-card-container');
+    const glow = document.getElementById('login-card-glow');
+    if (!card) return;
+
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (prefersReducedMotion) return;
+
+    let bounds;
+    function updateBounds() {
+        if (card) bounds = card.getBoundingClientRect();
+    }
+    updateBounds();
+    window.addEventListener('resize', updateBounds);
+    window.addEventListener('scroll', updateBounds);
+
+    card.addEventListener('mousemove', (e) => {
+        if (!bounds) updateBounds();
+        const mouseX = e.clientX - bounds.left;
+        const mouseY = e.clientY - bounds.top;
+
+        const xPct = mouseX / bounds.width;
+        const yPct = mouseY / bounds.height;
+
+        const tiltX = (0.5 - yPct) * 16;
+        const tiltY = (xPct - 0.5) * 16;
+
+        card.style.transform = `perspective(1000px) rotateX(${tiltX.toFixed(2)}deg) rotateY(${tiltY.toFixed(2)}deg) scale3d(1.02, 1.02, 1.02)`;
+
+        if (glow) {
+            glow.style.background = `radial-gradient(circle at ${mouseX}px ${mouseY}px, rgba(255, 255, 255, 0.16) 0%, rgba(99, 102, 241, 0.08) 35%, transparent 65%)`;
+            glow.style.opacity = '1';
+        }
+    });
+
+    card.addEventListener('mouseleave', () => {
+        card.style.transform = 'perspective(1000px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)';
+        if (glow) glow.style.opacity = '0';
+    });
 }
 
 function handleLoginKeyPress(e) {
@@ -665,6 +691,16 @@ function runDemoClaimFromModal(caseId) {
 /* PRELIMINARY AI ASSESSMENT & CHECK MY CLAIM */
 /* ========================================== */
 
+function formatDocName(doc) {
+    if (!doc) return 'Document';
+    return doc.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
+}
+
+function escapeJsStr(str) {
+    if (!str) return '';
+    return str.replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '\\"').replace(/\n/g, '\\n');
+}
+
 function renderWorkspace(claim) {
     if (!claim) return;
 
@@ -673,8 +709,9 @@ function renderWorkspace(claim) {
     document.getElementById('ws-incident-badge').innerText = claim.incident_type ? claim.incident_type.charAt(0).toUpperCase() + claim.incident_type.slice(1) : 'Accident';
 
     const statusBadge = document.getElementById('ws-status-badge');
-    statusBadge.innerHTML = `<span class="badge-icon-symbol">${getStatusSymbol(claim.recommendation)}</span> ${formatRecText(claim.recommendation)}`;
-    statusBadge.className = `badge-status ${getBadgeClass(claim.recommendation)}`;
+    const recType = (claim.recommendation || 'APPROVE').toUpperCase();
+    statusBadge.innerHTML = `<span class="badge-icon-symbol">${getStatusSymbol(recType)}</span> ${claim.recommendation_label || formatRecText(recType)}`;
+    statusBadge.className = `badge-status ${getBadgeClass(recType)}`;
 
     // Left Panel: Documents & Evidence (Available vs Missing)
     const reqDocs = claim.completeness?.required_documents || ['claim_form', 'repair_estimate', 'registration_certificate', 'driving_licence'];
@@ -702,7 +739,7 @@ function renderWorkspace(claim) {
         policyRow.style.fontSize = '13px';
         policyRow.style.fontWeight = '500';
         policyRow.style.cursor = 'pointer';
-        policyRow.innerHTML = `<span style="color:var(--success);">✓ Policy Document (Active POL-2026-104)</span>`;
+        policyRow.innerHTML = `<span style="color:var(--success);">✓ Policy Schedule (Active POL-2026-104)</span>`;
         policyRow.onclick = () => navigateTo('policies');
         availList.appendChild(policyRow);
 
@@ -716,8 +753,11 @@ function renderWorkspace(claim) {
             div.style.fontSize = '13px';
             div.style.fontWeight = '500';
             div.style.cursor = 'pointer';
-            div.innerHTML = `<span style="color:var(--success);">✓ ${doc.replace('_', ' ').toLowerCase().replace(/\b\w/g, c => c.toUpperCase())}</span>`;
-            div.onclick = () => openDocumentDrawer(`${doc}.pdf`, claim.evidence_items?.find(e => e.source_document && e.source_document.includes(doc))?.raw_text || "Document text content verified.");
+            div.innerHTML = `<span style="color:var(--success);">✓ ${formatDocName(doc)}</span>`;
+            
+            const matchingEvidence = claim.evidence_items?.find(e => e.source_document && e.source_document.toLowerCase().includes(doc.toLowerCase()));
+            const previewText = matchingEvidence?.raw_text || `Document: ${formatDocName(doc)}\nVerified against active policy POL-2026-104.\nStatus: Authentic and complete.`;
+            div.onclick = () => openDocumentDrawer(`${doc}.pdf`, previewText);
             availList.appendChild(div);
         });
     }
@@ -739,7 +779,7 @@ function renderWorkspace(claim) {
                 div.title = 'Click to upload this document';
                 div.innerHTML = `
                     <div style="display:flex; justify-content:space-between; align-items:center;">
-                        <span style="color:var(--warning);">! ${doc.replace('_', ' ').toLowerCase().replace(/\b\w/g, c => c.toUpperCase())}</span>
+                        <span style="color:var(--warning);">! ${formatDocName(doc)}</span>
                         <span style="font-size:11px; text-decoration:underline; color:var(--primary);">Upload +</span>
                     </div>
                 `;
@@ -751,7 +791,7 @@ function renderWorkspace(claim) {
         }
     }
 
-    // Center Panel: Claim Summary Facts Grid
+    // Center Panel: Facts Grid
     const factName = document.getElementById('ws-fact-name');
     const factVehicle = document.getElementById('ws-fact-vehicle');
     const factType = document.getElementById('ws-fact-type');
@@ -764,6 +804,127 @@ function renderWorkspace(claim) {
     if (factDate) factDate.innerText = claim.incident_date || '2026-08-21';
     if (factAmount) factAmount.innerText = claim.claimed_amount ? `₹${Number(claim.claimed_amount).toLocaleString('en-IN')}` : '₹48,750';
 
+    // Dynamic AI Readiness Checks Container
+    const checksContainer = document.getElementById('ws-ai-checks-container');
+    const checksSummaryBadge = document.getElementById('ws-checks-summary-badge');
+    if (checksContainer) {
+        checksContainer.innerHTML = '';
+        const findings = claim.findings || [];
+
+        if (checksSummaryBadge) {
+            const hasBlocked = findings.some(f => f.status === 'BLOCKED' || f.status === 'CONTRADICTED');
+            const hasMissing = findings.some(f => f.status === 'MISSING' || f.status === 'UNCERTAIN');
+            if (hasBlocked) {
+                checksSummaryBadge.className = 'badge-status reject';
+                checksSummaryBadge.innerHTML = '<span class="badge-icon-symbol">✗</span> Issues Detected';
+            } else if (hasMissing) {
+                checksSummaryBadge.className = 'badge-status request';
+                checksSummaryBadge.innerHTML = '<span class="badge-icon-symbol">!</span> Incomplete';
+            } else {
+                checksSummaryBadge.className = 'badge-status approve';
+                checksSummaryBadge.innerHTML = '<span class="badge-icon-symbol">✓</span> All Checks Passed';
+            }
+        }
+
+        if (findings.length === 0) {
+            checksContainer.innerHTML = `<div class="metadata-text" style="padding:12px;">No automated findings recorded.</div>`;
+        } else {
+            findings.forEach((f, idx) => {
+                const itemDiv = document.createElement('div');
+                itemDiv.className = 'ai-check-item' + (idx > 0 ? ' mt-12' : '');
+
+                let badgeClass = 'approve';
+                let iconSymbol = '✓';
+                let statusLabel = 'VERIFIED';
+                let rowClass = 'positive';
+
+                if (f.status === 'MISSING' || f.status === 'UNCERTAIN') {
+                    badgeClass = 'request';
+                    iconSymbol = '!';
+                    statusLabel = f.status === 'MISSING' ? 'MISSING' : 'UNCERTAIN';
+                    rowClass = 'warning';
+                } else if (f.status === 'BLOCKED' || f.status === 'CONTRADICTED') {
+                    badgeClass = 'reject';
+                    iconSymbol = '✗';
+                    statusLabel = f.status === 'CONTRADICTED' ? 'CONTRADICTION' : 'VIOLATION';
+                    rowClass = 'danger';
+                }
+
+                const sourceDoc = f.source_document || 'Submitted Evidence';
+                const pageNum = f.source_page || 1;
+                const fieldName = f.source_field || 'Condition Verification';
+                const previewSnippet = f.raw_evidence_text || f.description;
+
+                let clauseBadgeHtml = '';
+                if (f.policy_clause) {
+                    clauseBadgeHtml = `<span class="clause-citation-tag">⚖ ${escapeHtml(f.policy_clause)}${f.policy_page ? ` (Page ${f.policy_page})` : ''}</span>`;
+                }
+
+                itemDiv.innerHTML = `
+                    <div class="check-item-header">
+                        <span class="check-title">${idx + 1}. ${(f.category || 'EVIDENCE CHECK').toUpperCase()}</span>
+                        <span class="status-badge ${badgeClass}"><span class="badge-icon-symbol">${iconSymbol}</span> ${statusLabel}</span>
+                    </div>
+                    <div class="check-details mt-8">
+                        <div class="check-sub-row ${rowClass}">${iconSymbol} ${escapeHtml(f.description)}</div>
+                    </div>
+                    <div style="display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-top:8px;">
+                        <button class="evidence-citation-tag" onclick="openDocumentDrawer('${escapeHtml(sourceDoc)}', '${escapeJsStr(previewSnippet)}')">
+                            📄 Source: ${escapeHtml(sourceDoc)} → Page ${pageNum} → ${escapeHtml(fieldName)}
+                        </button>
+                        ${clauseBadgeHtml}
+                    </div>
+                `;
+                checksContainer.appendChild(itemDiv);
+            });
+        }
+    }
+
+    // Dynamic Policy Clause Evaluations Container
+    const policyContainer = document.getElementById('ws-policy-checks-container');
+    if (policyContainer) {
+        policyContainer.innerHTML = '';
+        const assessments = claim.policy_assessments || [];
+
+        if (assessments.length === 0) {
+            policyContainer.innerHTML = `<div class="metadata-text" style="padding:12px;">No specific policy clause evaluations recorded.</div>`;
+        } else {
+            assessments.forEach(pa => {
+                const card = document.createElement('div');
+                card.className = 'policy-card-cat';
+
+                let badgeClass = 'approve';
+                let iconSymbol = '✓';
+                let statusLabel = 'PASS';
+                if (pa.classification === 'BLOCKED') {
+                    card.classList.add('cat-exclusions');
+                    badgeClass = 'reject';
+                    iconSymbol = '✗';
+                    statusLabel = 'EXCLUSION';
+                } else if (pa.classification === 'UNCERTAIN' || pa.classification === 'NOT_APPLICABLE') {
+                    card.classList.add('cat-conditions');
+                    badgeClass = 'request';
+                    iconSymbol = '!';
+                    statusLabel = 'CONDITIONAL';
+                } else {
+                    card.classList.add('cat-coverage');
+                }
+
+                card.innerHTML = `
+                    <div class="card-header-flex">
+                        <strong style="color:var(--text-primary); font-size:14px;">${escapeHtml(pa.clause_id)}: ${escapeHtml(pa.clause_title)}</strong>
+                        <span class="status-badge ${badgeClass}"><span class="badge-icon-symbol">${iconSymbol}</span> ${statusLabel}</span>
+                    </div>
+                    <p class="body-text mt-8" style="font-size:13px; line-height:1.4;">${escapeHtml(pa.reasoning)}</p>
+                    <div style="margin-top:10px;">
+                        <span class="clause-citation-tag">⚖ Policy Document POL-2026-104 (Page ${pa.page || 1})</span>
+                    </div>
+                `;
+                policyContainer.appendChild(card);
+            });
+        }
+    }
+
     // Contradictions / Mismatches Cards
     const cCard = document.getElementById('ws-contradiction-card');
     const cContainer = document.getElementById('ws-contradictions-container');
@@ -772,7 +933,10 @@ function renderWorkspace(claim) {
     if (cCard && cContainer) {
         if (contradictions.length > 0) {
             cCard.classList.remove('hidden');
-            document.getElementById('ws-issues-count-badge').innerHTML = `<span class="badge-icon-symbol">!</span> ${contradictions.length} Issue${contradictions.length > 1 ? 's' : ''}`;
+            const issuesBadge = document.getElementById('ws-issues-count-badge');
+            if (issuesBadge) {
+                issuesBadge.innerHTML = `<span class="badge-icon-symbol">!</span> ${contradictions.length} Issue${contradictions.length > 1 ? 's' : ''}`;
+            }
             cContainer.innerHTML = '';
 
             contradictions.forEach(c => {
@@ -780,18 +944,18 @@ function renderWorkspace(claim) {
                 card.className = 'issue-card';
                 card.innerHTML = `
                     <div class="issue-card-top">
-                        <span class="issue-title">! ${c.field_name.replace('_', ' ').toUpperCase()} MISMATCH</span>
-                        <span class="badge-status request"><span class="badge-icon-symbol">!</span> POTENTIAL ISSUE</span>
+                        <span class="issue-title">! ${(c.field_name || 'FIELD').replace('_', ' ').toUpperCase()} MISMATCH</span>
+                        <span class="badge-status request"><span class="badge-icon-symbol">!</span> CONTRADICTION</span>
                     </div>
-                    <div class="issue-desc">${c.description}</div>
+                    <div class="issue-desc">${escapeHtml(c.description)}</div>
                     <div class="issue-comparison-table">
                         <div class="comp-box">
-                            <span>Source A (${c.source_a} P.${c.page_a})</span>
-                            <strong>${c.value_a}</strong>
+                            <span>Source A (${escapeHtml(c.source_a)} P.${c.page_a})</span>
+                            <strong>${escapeHtml(c.value_a)}</strong>
                         </div>
                         <div class="comp-box">
-                            <span>Source B (${c.source_b} P.${c.page_b})</span>
-                            <strong>${c.value_b}</strong>
+                            <span>Source B (${escapeHtml(c.source_b)} P.${c.page_b})</span>
+                            <strong>${escapeHtml(c.value_b)}</strong>
                         </div>
                     </div>
                 `;
@@ -804,7 +968,6 @@ function renderWorkspace(claim) {
 
     // Right Panel: Customer-Friendly AI Claim Assessment
     const recCard = document.getElementById('ws-rec-card');
-    const recType = (claim.recommendation || 'APPROVE').toUpperCase();
     if (recCard) {
         recCard.className = `card-enterprise recommendation-panel ${recType.toLowerCase()}`;
     }
@@ -816,33 +979,26 @@ function renderWorkspace(claim) {
 
     if (recTitleEl) recTitleEl.innerText = claim.recommendation_label || formatRecText(recType);
 
-    if (claim.explanation && claim.next_actions && claim.next_actions.length > 0) {
+    if (claim.explanation) {
         if (recSummaryEl) recSummaryEl.innerText = claim.explanation.split('\n')[0];
+    }
+
+    if (claim.next_actions && claim.next_actions.length > 0) {
         if (recExplanationEl) {
             recExplanationEl.innerHTML = claim.next_actions.map(a => '• ' + escapeHtml(a)).join('<br>');
         }
-        if (recGuidanceEl) {
-            recGuidanceEl.innerText = (claim.analysis_warnings && claim.analysis_warnings.length > 0) 
-                ? claim.analysis_warnings.join(' | ') 
-                : 'Preliminary AI Review — Subject to Formal Insurer Verification';
-        }
     } else if (recType === 'APPROVE') {
-        if (recSummaryEl) recSummaryEl.innerText = "Your claim currently appears ready for submission with complete required documentation and valid policy coverage.";
         if (recExplanationEl) recExplanationEl.innerHTML = "✓ All mandatory documents available<br>✓ Valid coverage dates verified<br>✓ Repair estimate within policy limits";
-        if (recGuidanceEl) recGuidanceEl.innerText = "You can proceed to submit your claim package to your insurer.";
-    } else if (recType === 'REQUEST_INFORMATION' || recType === 'REQ_INFO') {
-        if (recSummaryEl) recSummaryEl.innerText = "Your claim currently appears to meet some policy requirements, but additional information is needed before it is ready.";
-        if (recExplanationEl) recExplanationEl.innerHTML = "• Driving Licence missing<br>• Incident Date verification on Claim Form";
-        if (recGuidanceEl) recGuidanceEl.innerText = "Upload your driving licence to make your claim ready for submission.";
-    } else if (recType === 'ESCALATE') {
-        if (recSummaryEl) recSummaryEl.innerText = "A date contradiction was detected across your submitted evidence that requires clarification.";
-        if (recExplanationEl) recExplanationEl.innerHTML = "• Incident Date mismatch between Claim Form and Police FIR";
-        if (recGuidanceEl) recGuidanceEl.innerText = "Update your incident date or submit an updated statement to clarify the mismatch.";
-    } else if (recType === 'REJECT') {
-        if (recSummaryEl) recSummaryEl.innerText = "A potential policy exclusion clause was identified during the automated coverage check.";
-        if (recExplanationEl) recExplanationEl.innerHTML = "• Vehicle operated for commercial ride-share taxi use (Exclusion Clause 4.2)";
-        if (recGuidanceEl) recGuidanceEl.innerText = "Review exclusion Clause 4.2 or contact your insurer for clarification.";
     }
+
+    if (recGuidanceEl) {
+        recGuidanceEl.innerText = (claim.analysis_warnings && claim.analysis_warnings.length > 0) 
+            ? claim.analysis_warnings.join(' | ') 
+            : 'Preliminary AI Review — Subject to Formal Insurer Verification';
+    }
+
+    // Update global dashboard priority card and missing badges
+    updateDashboardPriorityCard();
 }
 
 function updateDashboardPriorityCard() {

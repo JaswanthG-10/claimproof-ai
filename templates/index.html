@@ -7,7 +7,7 @@
     <!-- Google Font: Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Sora:wght@400;600;700;800&display=swap" rel="stylesheet">
     <!-- Three.js for Cinematic 3D Ambient Scene -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <link rel="stylesheet" href="/static/styles.css">
@@ -18,28 +18,32 @@
     <!-- CINEMATIC 3D MOTION LOGIN ENTRY PAGE       -->
     <!-- ========================================== -->
     <div id="welcome-screen" class="cinematic-login-screen">
-        <canvas id="login-3d-canvas"></canvas>
-        <div class="login-center-content">
-            <div class="login-brand-shield">
-                <div class="shield-logo-box">
-                    <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-                        <path d="m9 12 2 2 4-4"/>
-                    </svg>
+        <canvas id="login-particle-canvas"></canvas>
+        <div class="login-ambient-aura"></div>
+        <div class="login-card-perspective">
+            <div id="login-card-container" class="login-glass-card">
+                <div id="login-card-glow" class="login-specular-glow"></div>
+                <div class="login-brand-shield">
+                    <div class="shield-logo-box login-shield-float">
+                        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                            <path d="m9 12 2 2 4-4"/>
+                        </svg>
+                    </div>
+                    <h1 class="login-brand-title">ClaimProof AI</h1>
                 </div>
-                <h1 class="login-brand-title">ClaimProof AI</h1>
-            </div>
-            <p class="login-brand-tagline">AI-powered evidence review for motor insurance claims</p>
-            
-            <div class="login-action-area mt-32">
-                <button id="enter-workspace-btn" class="btn-primary btn-enter-workspace" onclick="handleWorkspaceEntry()">
-                    <span>Enter Workspace</span>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
-                        <line x1="5" y1="12" x2="19" y2="12"/>
-                        <polyline points="12 5 19 12 12 19"/>
-                    </svg>
-                </button>
-                <span class="enter-key-hint mt-12">Press Enter ↵ to continue</span>
+                <p class="login-brand-tagline">AI-assisted motor insurance claims evidence review & readiness assessment</p>
+                
+                <div class="login-action-area mt-32">
+                    <button id="enter-workspace-btn" class="btn-primary btn-enter-workspace" onclick="handleWorkspaceEntry()">
+                        <span>Enter Workspace</span>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                            <line x1="5" y1="12" x2="19" y2="12"/>
+                            <polyline points="12 5 19 12 12 19"/>
+                        </svg>
+                    </button>
+                    <span class="enter-key-hint mt-12">Press Enter ↵ to continue</span>
+                </div>
             </div>
         </div>
     </div>
@@ -447,66 +451,34 @@
                                 </div>
                             </div>
 
-                            <!-- STRUCTURED CATEGORIZED AI CHECKS -->
+                            <!-- DYNAMIC AI READINESS CHECKS -->
                             <div class="card-enterprise">
-                                <h4 class="card-title">AI Claim Readiness Checks</h4>
-                                <span class="card-subtitle">Automated evaluation across documents, consistency, and policy terms</span>
-
-                                <div class="ai-check-list mt-16">
-                                    <div class="ai-check-item">
-                                        <div class="check-item-header">
-                                            <span class="check-title">1. DOCUMENT CHECK</span>
-                                            <span class="status-badge request"><span class="badge-icon-symbol">!</span> 3/4 Docs</span>
-                                        </div>
-                                        <div class="check-details mt-8">
-                                            <div class="check-sub-row positive">✓ Claim Form available</div>
-                                            <div class="check-sub-row positive">✓ Repair Estimate available</div>
-                                            <div class="check-sub-row warning">! Driving Licence missing</div>
-                                        </div>
+                                <div class="card-header-flex">
+                                    <div>
+                                        <h4 class="card-title">AI Claim Readiness Checks</h4>
+                                        <span class="card-subtitle">Automated evaluation across evidence, consistency, and policy terms</span>
                                     </div>
+                                    <span id="ws-checks-summary-badge" class="badge-status request"><span class="badge-icon-symbol">!</span> Analyzing</span>
+                                </div>
 
-                                    <div class="ai-check-item mt-12">
-                                        <div class="check-item-header">
-                                            <span class="check-title">2. INFORMATION CHECK</span>
-                                            <span class="status-badge approve"><span class="badge-icon-symbol">✓</span> Complete</span>
-                                        </div>
-                                        <div class="check-details mt-8">
-                                            <div class="check-sub-row positive">✓ Vehicle registration matches policy schedule</div>
-                                            <div class="check-sub-row positive">✓ Repair invoice itemized</div>
-                                        </div>
-                                    </div>
-
-                                    <div class="ai-check-item mt-12">
-                                        <div class="check-item-header">
-                                            <span class="check-title">3. CONSISTENCY CHECK</span>
-                                            <span class="status-badge request"><span class="badge-icon-symbol">!</span> 1 Issue</span>
-                                        </div>
-                                        <div class="check-details mt-8">
-                                            <div class="check-sub-row warning">! Incident date missing from Claim Form</div>
-                                        </div>
-                                    </div>
-
-                                    <div class="ai-check-item mt-12">
-                                        <div class="check-item-header">
-                                            <span class="check-title">4. COVERAGE CHECK</span>
-                                            <span class="status-badge approve"><span class="badge-icon-symbol">✓</span> Covered</span>
-                                        </div>
-                                        <div class="check-details mt-8">
-                                            <div class="check-sub-row positive">✓ Accidental damage appears covered under Own Damage terms</div>
-                                        </div>
-                                    </div>
-
-                                    <div class="ai-check-item mt-12">
-                                        <div class="check-item-header">
-                                            <span class="check-title">5. POLICY CONDITIONS</span>
-                                            <span class="status-badge request"><span class="badge-icon-symbol">!</span> Action Needed</span>
-                                        </div>
-                                        <div class="check-details mt-8">
-                                            <div class="check-sub-row warning">! Valid driving licence required under Clause 5.1</div>
-                                        </div>
-                                    </div>
+                                <div id="ws-ai-checks-container" class="ai-check-list mt-16">
+                                    <!-- Dynamically populated from claim.findings -->
                                 </div>
                             </div>
+
+                            <!-- DYNAMIC POLICY CLAUSE EVALUATION -->
+                            <div class="card-enterprise">
+                                <div class="card-header-flex">
+                                    <div>
+                                        <h4 class="card-title">Policy Terms & Clause Evaluations</h4>
+                                        <span class="card-subtitle">Verified against Active Policy POL-2026-104</span>
+                                    </div>
+                                </div>
+                                <div id="ws-policy-checks-container" class="policy-cards-stack mt-16">
+                                    <!-- Dynamically populated from claim.policy_assessments -->
+                                </div>
+                            </div>
+
 
                             <!-- CONTRADICTIONS / CONCERNS CARDS -->
                             <div id="ws-contradiction-card" class="card-enterprise alert-border hidden">
