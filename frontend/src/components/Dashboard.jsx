@@ -162,6 +162,11 @@ export default function Dashboard({ onSignOut, onSelectClaim, onStartClaim, onOp
 
           {/* Right: Search, Notifications, Avatar */}
           <div className="flex items-center gap-3">
+            {/* Live Port 8000 Unified Badge */}
+            <div className="hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#10b981]/15 border border-[#10b981]/30 text-[11px] text-[#10b981]">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#10b981] animate-pulse" />
+              <span className="font-mono font-semibold">Port 8000 Unified</span>
+            </div>
             {/* Search input button */}
             <button
               onClick={onOpenSearch}

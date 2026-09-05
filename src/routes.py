@@ -1,4 +1,4 @@
-﻿import os
+import os
 import sqlite3
 import json
 import shutil
@@ -171,7 +171,44 @@ def save_review_to_db(review: ClaimReview):
 # Static and Health Routes
 @router.get("/", response_class=FileResponse)
 async def serve_dashboard():
+    react_index = os.path.join(os.path.dirname(os.path.dirname(__file__)), "frontend", "dist", "index.html")
+    if os.path.exists(react_index):
+        return FileResponse(react_index)
     return FileResponse("templates/index.html")
+
+
+@router.get("/classic", response_class=FileResponse)
+async def serve_classic():
+    return FileResponse("templates/index.html")
+
+
+@router.get("/api/claims")
+async def list_all_claims():
+    """Fetch all claims from SQLite database."""
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT id, customer_name, vehicle_number, incident_type, incident_date, 
+               claimed_amount, recommendation, recommendation_label, created_at
+        FROM claims ORDER BY created_at DESC
+    """)
+    rows = cursor.fetchall()
+    conn.close()
+    return [
+        {
+            "id": r[0],
+            "customer_name": r[1],
+            "vehicle_number": r[2],
+            "incident_type": r[3],
+            "incident_date": r[4],
+            "claimed_amount": r[5],
+            "recommendation": r[6],
+            "recommendation_label": r[7],
+            "created_at": r[8]
+        }
+        for r in rows
+    ]
+
 
 
 @router.get("/health")
